@@ -298,3 +298,15 @@ def rundecoder(x, y, decoder):
         score[i] = decode_inst.score(y_test, x_test[:, 0])
 
     return np.mean(score), sem(score)
+
+
+def rsa(arr, second_arr, suffix, plotfunc, area):
+    rsa = np.empty((arr.shape[1], arr.shape[1]))
+    for i_state, state in enumerate(arr.T):
+        state_mask = ~np.isnan(state)
+        for j_state, state2 in enumerate(second_arr.T):
+            rsa[i_state, j_state] = corrcoef(state, state2)[0, 1]
+
+    plotfunc(rsa, area, suffix)
+
+    return rsa.flatten()

@@ -14,3 +14,21 @@ def updatecounts(counter, cell, n):
     counter[cell] = 1
     if int(sum(counter)) % 20 == 0:
         print(f'{int(sum(counter))}/{n}')
+
+
+def normalisedata(arr):
+    if D.rsa_norm_method == 'normalise':
+        arr -= np.min(arr)
+        arr /= np.max(arr)
+    elif D.rsa_norm_method == 'standardise':
+        arr -= np.mean(arr)
+        arr /= np.std(arr)
+    else:
+        raise Exception('Error!')
+    return arr
+
+
+def getavgfr(sc, data, cell):
+    fr = data.generatenormalisedepoch(cell, sc)
+    fr_window = np.mean(fr[:, D.rsa_start:D.rsa_stop], axis=1)  # Just take average FR just after the event
+    return fr_window
