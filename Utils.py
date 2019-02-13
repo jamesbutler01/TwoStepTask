@@ -1,5 +1,7 @@
 import Details as D
 import numpy as np
+import os
+import matplotlib.pyplot as plt
 
 
 def getarrs(num_cond, num_rows):
@@ -27,6 +29,12 @@ def normalisedata(arr):
         raise Exception('Error!')
     return arr
 
+def savefig(savedir):
+    path = f'{D.dir_savefig}{savedir}'
+    if not os.path.exists(path):
+        os.makedirs(path)
+    plt.savefig(path)
+    plt.close('all')
 
 def getavgfr(sc, data, cell):
     fr = data.generatenormalisedepoch(cell, sc)

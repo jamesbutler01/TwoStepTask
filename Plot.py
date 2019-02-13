@@ -1,297 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
-# Static plot parameters
 import Details as D
+import Utils as U
+# Static plot parameters
 buffer = 10  # Gap between each task event
 numpoints = D.num_timepoints * D.numtrialepochs + buffer * D.numtrialepochs
 binlength = D.num_timepoints + buffer
 xtickpos = [int((i_epoch + 0.1) * binlength) for i_epoch in range(D.numtrialepochs)]
 width_regplot = 15
 height_regplot = 2.75
-
-
-def Deep15(betasallareas_avg, betasallareas_sem, sigclusters, saveprefix):
-    if saveprefix == 'r':
-        datatypelabel = 'reward'
-    else:
-        datatypelabel = 'q-value'
-
-    num_x = 4
-    num_timepoints = D.smooth_outputlength
-    epochs = (D.sc_madefixation, D.sc_choice1on, D.sc_choice1made, D.sc_transition, D.sc_choice2on, D.sc_choice2made,
-              D.sc_secondaryreinforceron)
-    epochnames = (
-    'Fixation', '\nChoice 1 on', 'Choice 1 made', '\nTransition Revealed', 'Choice 2 on', '\nChoice 2 made',
-    'Secondary Reinforcer')
-    numepochspertrial = len(epochs)
-
-    # Now stich together into one big trace for each area
-    betasallareas_avg = np.swapaxes(betasallareas_avg, 0, 2)
-    betasallareas_sem = np.swapaxes(betasallareas_sem, 0, 2)
-    sigclusters = np.swapaxes(sigclusters, 0, 2)
-
-    buffer = 10  # Gap between each task event
-    numpoints = num_timepoints * numepochspertrial + buffer * (numepochspertrial - 1)
-    binlength = num_timepoints+buffer
-
-    # Static plot parameters
-    xlabels = [name for name in epochnames]
-    xtickpos = [int((i_epoch + 0.1) * binlength) for i_epoch in range(numepochspertrial)]
-    labels = ('Repeat common', 'Repeat rare', 'Switch common', 'Switch rare')
-    labels_twolines = ('Repeat\ncommon', 'Repeat\nrare', 'Switch\ncommon', 'Switch\nrare')
-
-    def makeandplotavgs(ax, i_trialoffset, tr_offset, ylab, sigmarkers, betas_avgs, betas_sems, leg):
-        avgs = np.empty((num_x, numpoints))
-        avgs.fill(np.nan)
-        sems = np.copy(avgs)
-        sigmarker = np.zeros(numpoints)
-
-        for i_epoch in range(numepochspertrial):
-            start = i_epoch * binlength
-            fin = i_epoch * binlength + num_timepoints
-
-            sigmarker[start:fin] = sigmarkers[i_abs, i_epoch + tr_offset]
-
-            for i_beta in range(num_x):
-                avgs[i_beta, start:fin] = betas_avgs[i_abs, i_epoch + tr_offset, i_beta]
-                sems[i_beta, start:fin] = betas_sems[i_abs, i_epoch + tr_offset, i_beta]
-
-        sigmarker *= np.nanmax(avgs)
-        sigmarker[sigmarker==0] = np.nan
-        sigmarker += 0.05
-        if leg:
-            ax.plot(sigmarker, color='black', lw=2, label='Significant')
-        else:
-            ax.plot(sigmarker, color='black', lw=2)
-
-        for i_beta, (avg, sem, label) in enumerate(zip(avgs, sems, labels)):
-            plotpanel(ax, avg, sem, i_trialoffset, ylab, leg, i_beta)
-
-        # # Also plot grand mean
-        # grandmean = np.mean(avgs, axis=0)
-        # ax.plot(grandmean, color='black', ls='--', lw=2)
-
-
-    def plotpanel(ax, avg, sem, pos, ylab, leg, colornumber):
-        if leg:
-            ax.plot(avg, label=labels[colornumber], color=f'C{colornumber}', lw=3)
-        else:
-            ax.plot(avg, color=f'C{colornumber}', lw=3)
-        ax.fill_between(range(len(avg)), avg - sem, avg + sem, alpha=0.3, color=f'C{colornumber}')
-        ax.set_xlim(0, numpoints)
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        ax.yaxis.set_ticks_position('left')
-        if pos != 3:
-            ax.spines['bottom'].set_visible(False)
-            ax.set_xticks([])
-        else:
-            ax.xaxis.set_ticks_position('bottom')
-        ax.set_ylabel(ylab, fontsize=11)
-        plt.xticks(xtickpos, xlabels, fontsize=11)
-        plt.yticks(fontsize=13)
-
-    def finalplotadjustments(f):
-        plt.suptitle(f'Betas for t+0 {datatypelabel} ({area}){abstitle}', x=0.25, fontsize=18)
-        f.legend(loc='upper right', fancybox=True, shadow=True, ncol=5, bbox_to_anchor=(1, 1))
-        plt.tight_layout(rect=[0, 0, 1, 0.95])
-        plt.tick_params(axis='both', which='major', labelsize=13)
-
-
-    # 2x1 plot
-    for i_abs, (abslabel , abstitle) in enumerate(zip(('mean', 'abs'), ('', ' (absolute)'))):
-        for i_area, (area, betasonearea_avg, betasonearea_sem, clustersonearea) in enumerate(zip(D.areas, betasallareas_avg, betasallareas_sem, sigclusters)):
-
-            f, axes = plt.subplots(2, 1, figsize=(15,6), sharex=True, sharey=True)
-
-            for i_trialoffset, (tr_offset, ax, ylab, leg) in enumerate(zip((0, numepochspertrial), axes, ('t+1', 't+2'), (True, False))):
-                makeandplotavgs(ax, i_trialoffset, tr_offset, ylab, clustersonearea, betasonearea_avg, betasonearea_sem, leg)
-
-            finalplotadjustments(f)
-            if abslabel == 'mean':
-                plt.savefig(f'{D.dir_savefig}{saveprefix}_betas_{area}_{abslabel}')
-            plt.close('all')
-
-    # 1x5 plot
-    for i_abs, (abslabel , abstitle) in enumerate(zip(('mean', 'abs'), ('', ' (absolute)'))):
-        for i_area, (area, betasonearea_avg, betasonearea_sem, clustersonearea) in enumerate(zip(D.areas, betasallareas_avg, betasallareas_sem, sigclusters)):
-
-            f, axes = plt.subplots(6, 1, figsize=(15,11), sharex=True)
-
-            makeandplotavgs(axes[0], 0, 0, 't+1 activity \n(split by t+1)', clustersonearea, betasonearea_avg, betasonearea_sem, True)
-            makeandplotavgs(axes[1], 1, numepochspertrial, 't+2 activity \n(split by t+1)', clustersonearea, betasonearea_avg, betasonearea_sem, False)
-
-            for i_trialoffset, (tr_offset, ax, ylab) in enumerate(
-                    zip([numepochspertrial * (i + 2) for i in range(4)], axes[2:], ['t+2 activity \nfor t+1 =\n '+label+'\n (split by t+2)' for label in labels])):
-                makeandplotavgs(ax, i_trialoffset, tr_offset, ylab, clustersonearea, betasonearea_avg, betasonearea_sem, False)
-
-
-            finalplotadjustments(f)
-            if abslabel == 'mean':
-                plt.savefig(f'{D.dir_savefig}{saveprefix}_betas_2_{area}_{abslabel}')
-            plt.close('all')
-
-
-def TwoAheadReg(avgs_orig, sems_orig, sigclusters_orig, saveprefix, p):
-    if saveprefix == 'r':
-        datatypelabel = 'reward'
-    else:
-        datatypelabel = 'q-value'
-
-    avgs = np.copy(avgs_orig)
-    sems = np.copy(sems_orig)
-    sigclusters = np.copy(sigclusters_orig)
-
-    # Static plot parameters
-    buffer = 10  # Gap between each task event
-    numpoints = p.num_timepoints * p.numtrialepochs + buffer * p.numtrialepochs
-    binlength = p.num_timepoints+buffer
-    xtickpos = [int((i_epoch + 0.1) * binlength) for i_epoch in range(p.numtrialepochs)]
-
-    def makeandplotavgs(avgs_choice, sems_choice, clusters_choice, ax, ylab):
-        avgs = np.empty((p.num_trans_hists, numpoints))
-        avgs.fill(np.nan)
-        sems = np.copy(avgs)
-        sigmarker = np.zeros(numpoints)
-
-        for i_epoch in range(p.numtrialepochs):
-            start = i_epoch * binlength
-            fin = i_epoch * binlength + p.num_timepoints
-
-            sigmarker[start:fin] = clusters_choice[i_epoch]
-
-            for i_trans in range(p.num_trans_hists):
-                avgs[i_trans, start:fin] = avgs_choice[i_trans, i_epoch]
-                sems[i_trans, start:fin] = sems_choice[i_trans, i_epoch]
-
-        sigmarker *= np.nanmax(avgs)
-        sigmarker[sigmarker==0] = np.nan
-        sigmarker += 0.05
-        if ylab == p.names_choice_hists[0]:
-            ax.plot(sigmarker, color='black', lw=2, label='Significant')
-        else:
-            ax.plot(sigmarker, color='black', lw=2)
-
-        for i_trans, (avg, sem, label) in enumerate(zip(avgs, sems, p.names_trans_hists)):
-            plotpanel(ax, avg, sem, ylab, i_trans)
-
-    def plotpanel(ax, avg, sem, ylab, colornumber):
-        if ylab == p.names_choice_hists[0]:
-            ax.plot(avg, label=p.names_trans_hists[colornumber], color=f'C{colornumber}', lw=3)
-        else:
-            ax.plot(avg, color=f'C{colornumber}', lw=3)
-        ax.fill_between(range(len(avg)), avg - sem, avg + sem, alpha=0.3, color=f'C{colornumber}')
-        ax.set_xlim(0, numpoints)
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        ax.yaxis.set_ticks_position('left')
-        if colornumber != 3:
-            ax.spines['bottom'].set_visible(False)
-            ax.set_xticks([])
-        else:
-            ax.xaxis.set_ticks_position('bottom')
-        ax.set_ylabel(ylab, fontsize=11)
-        plt.xticks(xtickpos, p.names_epochs, fontsize=11)
-        plt.yticks(fontsize=13)
-
-    def finalplotadjustments(f, area):
-        plt.suptitle(f't+2 Betas for t+0 {datatypelabel} ({area})', x=0.25, fontsize=18)
-        f.legend(loc='upper right', fancybox=True, shadow=True, ncol=5, bbox_to_anchor=(1, 1))
-        plt.tight_layout(rect=[0, 0, 1, 0.95])
-        plt.tick_params(axis='both', which='major', labelsize=13)
-
-    # 1x4 plot
-    for i_area, (area, avgs_area, sems_area, clusters_area) in enumerate(zip(D.areas, avgs, sems, sigclusters)):
-
-        f, axes = plt.subplots(p.num_choice_hists, 1, figsize=(15,2.75*p.num_choice_hists), sharex=True)
-
-        for avgs_choice, sems_choice, clusters_choice, ax, ylab in zip(avgs_area, sems_area, clusters_area, axes, p.names_choice_hists):
-            makeandplotavgs(avgs_choice, sems_choice, clusters_choice, ax, ylab)
-
-
-        finalplotadjustments(f, area)
-        plt.savefig(f'{D.dir_savefig}{p.savefolder}/{saveprefix}_{area}')
-        plt.close('all')
-
-
-def RegOneAhead(avgs_orig, sems_orig, sigclusters_orig, saveprefix, p):
-    if saveprefix == 'r':
-        datatypelabel = 'reward'
-    else:
-        datatypelabel = 'q-value'
-
-    avgs = np.copy(avgs_orig)
-    sems = np.copy(sems_orig)
-    sigclusters = np.copy(sigclusters_orig)
-
-    # Static plot parameters
-    buffer = 10  # Gap between each task event
-    numpoints = p.num_timepoints * p.numtrialepochs + buffer * p.numtrialepochs
-    binlength = p.num_timepoints + buffer
-    xtickpos = [int((i_epoch + 0.1) * binlength) for i_epoch in range(p.numtrialepochs)]
-
-    def makeandplotavgs(avgs_choice, sems_choice, clusters_choice, ax, i_choice):
-        avgs = np.empty((p.num_trans_hists, numpoints))
-        avgs.fill(np.nan)
-        sems = np.copy(avgs)
-        sigmarker = np.zeros(numpoints)
-
-        for i_epoch in range(p.numtrialepochs):
-            start = i_epoch * binlength
-            fin = i_epoch * binlength + p.num_timepoints
-
-            sigmarker[start:fin] = clusters_choice[i_epoch]
-
-            for i_trans in range(p.num_trans_hists):
-                avgs[i_trans, start:fin] = avgs_choice[i_trans, i_epoch]
-                sems[i_trans, start:fin] = sems_choice[i_trans, i_epoch]
-
-        sigmarker *= np.nanmax(avgs)
-        sigmarker[sigmarker == 0] = np.nan
-        sigmarker += 0.05
-#        if ylab == p.names_choice_hists[0]:
-  #          ax.plot(sigmarker, color='black', lw=2, label='Significant')
- #       else:
-   #         ax.plot(sigmarker, color='black', lw=2)
-
-        for i_trans, (avg, sem) in enumerate(zip(avgs, sems)):
-            plotpanel(ax, avg, sem, i_trans, i_choice)
-
-    def plotpanel(ax, avg, sem, i_trans, i_choice):
-        num = i_choice * 2 + i_trans
-        ax.plot(avg, label=f'{p.names[num]}', color=f'C{num}', lw=3)
-        ax.fill_between(range(len(avg)), avg - sem, avg + sem, alpha=0.3, color=f'C{num}')
-        ax.set_xlim(0, numpoints)
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        ax.yaxis.set_ticks_position('left')
-        if num != 3:
-            ax.spines['bottom'].set_visible(False)
-            ax.set_xticks([])
-        else:
-            ax.xaxis.set_ticks_position('bottom')
-        #ax.set_ylabel(ylab, fontsize=11)
-        plt.xticks(xtickpos, p.names_epochs, fontsize=11)
-        plt.yticks(fontsize=13)
-
-    def finalplotadjustments(f, area):
-        plt.suptitle(f't+1 Betas for t+0 {datatypelabel} ({area})', x=0.25, fontsize=18)
-        f.legend(loc='upper right', fancybox=True, shadow=True, ncol=5, bbox_to_anchor=(1, 1))
-        plt.tight_layout(rect=[0, 0, 1, 0.95])
-        plt.tick_params(axis='both', which='major', labelsize=13)
-
-    # 1x4 plot
-    for i_area, (area, avgs_area, sems_area, clusters_area) in enumerate(zip(D.areas, avgs, sems, sigclusters)):
-
-        f, axes = plt.subplots(1, 1, figsize=(15,4), sharex=True)
-
-        for i_choice, (avgs_choice, sems_choice, clusters_choice) in enumerate(zip(avgs_area, sems_area, clusters_area)):
-            makeandplotavgs(avgs_choice, sems_choice, clusters_choice, axes, i_choice)
-
-        finalplotadjustments(f, area)
-        plt.savefig(f'{D.dir_savefig}reg/{p.savefolder}/{saveprefix}_{area}')
-        plt.close('all')
 
 
 def _makeandplotavgs(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labels, show_leg):
@@ -380,97 +97,6 @@ def _finalplotadjustments(f, title):
     plt.tick_params(axis='both', which='major', labelsize=13)
 
 
-def RegTwoAheadAxB(avgs_orig, sems_orig, avgs_orig2, sems_orig2, trace_names, savefolder):
-    avgs = np.copy(avgs_orig)
-    sems = np.copy(sems_orig)
-
-    numplots = 2
-
-    for i_area, (area, avgs_area, sems_area, avgs_area2, sems_area2) in enumerate(zip(D.areas, avgs, sems, avgs_orig2, sems_orig2)):
-
-        f, axes = plt.subplots(numplots, 1, figsize=(width_regplot,height_regplot*numplots), sharex=True)
-
-        _makeandplotavgs(avgs_area, sems_area, None, axes[0], ylab='t+0 reward betas \n(A(r)_x_B)', showsig=False, leg_labels=trace_names, show_leg=True)
-        _makeandplotavgs(avgs_area2, sems_area2, None, axes[1], ylab='t+1 reward betas \n(A_x(r)_B)', showsig=False, leg_labels=trace_names, show_leg=False)
-        title = f't+0 and t+1 betas during t+1, split by t+2 behaviour ({area})'
-        _finalplotadjustments(f, title)
-        plt.savefig(f'{D.dir_savefig}reg/{savefolder}/{area}')
-        plt.close('all')
-
-
-def RegTwoAheadAAR(avgs_orig, sems_orig, sigclusters, trace_names, savefolder):
-
-    numplots = 1
-
-    for i_area, (area, avgs_area, sems_area, sig_area) in enumerate(zip(D.areas, avgs_orig, sems_orig, sigclusters)):
-
-        f, axes = plt.subplots(numplots, 1, figsize=(width_regplot, height_regplot*numplots), sharex=True)
-
-        _makeandplotavgs(avgs_area, sems_area, sig_area, axes, ylab='Average reward betas', showsig=True, leg_labels=trace_names, show_leg=True)
-        title = f'Betas for t+0 reward in t+2 ({area})'
-        _finalplotadjustments(f, title)
-        plt.savefig(f'{D.dir_savefig}reg/{savefolder}/{area}')
-        plt.close('all')
-
-
-def RegPrevC2(avgs_orig, sems_orig, sigclusters, trace_names, savefolder):
-
-    numplots = 1
-
-    for i_area, (area, avgs_area, sems_area, sig_area) in enumerate(zip(D.areas, avgs_orig, sems_orig, sigclusters)):
-
-        f, axes = plt.subplots(numplots, 1, figsize=(width_regplot, height_regplot*numplots), sharex=True)
-
-        _makeandplotavgs(avgs_area, sems_area, sig_area, axes, ylab='Average reward betas', showsig=True, leg_labels=trace_names, show_leg=True)
-        title = f'Betas for t+0 and t+1 reward in t+2 ({area})'
-        _finalplotadjustments(f, title)
-        plt.savefig(f'{D.dir_savefig}reg/{savefolder}/{area}')
-        plt.close('all')
-
-def RegAAR(avgs_orig, sems_orig, sigclusters, trace_names, savefolder, titlesuffix, fileprefix, titlesuffix2):
-
-    numplots = 1
-
-    for i_area, (area, avgs_area, sems_area, sig_area) in enumerate(zip(D.areas, avgs_orig, sems_orig, sigclusters)):
-
-        f, axes = plt.subplots(numplots, 1, figsize=(width_regplot, height_regplot*numplots), sharex=True)
-
-        _makeandplotavgs(avgs_area, sems_area, sig_area, axes, ylab='Average FR', showsig=True, leg_labels=trace_names, show_leg=True)
-        title = f'{titlesuffix2} FR depending on t+2 choice ({titlesuffix}) ({area})'
-        _finalplotadjustments(f, title)
-        plt.savefig(f'{D.dir_savefig}reg/{savefolder}/{titlesuffix}/{fileprefix}_{area}')
-        plt.close('all')
-
-
-def RegZeroAhead(avgs_orig, sems_orig, sigclusters, trace_names, savefolder):
-
-    numplots = 2
-
-    for i_area, (area, avgs_area, sems_area, sig_area) in enumerate(zip(D.areas, avgs_orig, sems_orig, sigclusters)):
-
-        f, axes = plt.subplots(numplots, 1, figsize=(width_regplot, height_regplot*numplots), sharex=True)
-
-        _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes[0], ylab='Average reward betas', showsig=True, leg_labels=trace_names, show_leg=True)
-        _makeandplotavgs(avgs_area[1], sems_area[1], sig_area[1], axes[1], ylab='Average reward betas', showsig=True, leg_labels=trace_names, show_leg=False)
-        title = f't+1 betas during t+2, split by t+1 behaviour ({area})'
-        _finalplotadjustments(f, title)
-        plt.savefig(f'{D.dir_savefig}reg/{savefolder}/{area}')
-        plt.close('all')
-
-def RegPrevC2(avgs_orig, sems_orig, sigclusters, trace_names, savefolder):
-
-    numplots = avgs_orig.shape[1]
-
-    for i_area, (area, avgs_area, sems_area, sig_area) in enumerate(zip(D.areas, avgs_orig, sems_orig, sigclusters)):
-
-        f, axes = plt.subplots(numplots, 1, figsize=(width_regplot, height_regplot*numplots), sharex=True)
-
-        for i, (label, leg_bool) in enumerate(zip(('t0', 't1', 'best t', 'rel best t', 'rel t1'), (True, False, False, False, False))):
-            _makeandplotavgs(avgs_area[i], sems_area[i], sig_area[i], axes[i], ylab=f'{label} Reward betas', showsig=True, leg_labels=trace_names, show_leg=leg_bool)
-        title = f't+0 and t+1 betas during t+2, split by transition types ({area})'
-        _finalplotadjustments(f, title)
-        plt.savefig(f'{D.dir_savefig}reg/{savefolder}/{area}')
-        plt.close('all')
 
 def GeneralPlot(avgs, sems, sigclusters, trace_names, savefolder, ytitles, maintitle):
     numrows = avgs.shape[1]
@@ -489,7 +115,7 @@ def GeneralPlot(avgs, sems, sigclusters, trace_names, savefolder, ytitles, maint
 
         title = maintitle+ f' ({area})'
         _finalplotadjustments(f, title)
-        D.savefig(f'{savefolder}/{area}')
+        U.savefig(f'{savefolder}/{area}')
 
 
 def GeneralAllAreas(avgs, sems, sigclusters, trace_names, savefolder, ytitles, maintitle):
@@ -508,7 +134,7 @@ def GeneralAllAreas(avgs, sems, sigclusters, trace_names, savefolder, ytitles, m
             _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=D.areanames[i_area], showsig=True, leg_labels=trace_names, show_leg=False)
 
     _finalplotadjustments(f, maintitle)
-    D.savefig(f'{savefolder}/all')
+    U.savefig(f'{savefolder}/all')
 
     f, axes_all = plt.subplots(D.numareas, 1, figsize=(width_regplot, height_regplot*D.numareas), sharex=True)
 
@@ -519,7 +145,7 @@ def GeneralAllAreas(avgs, sems, sigclusters, trace_names, savefolder, ytitles, m
             _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=D.areanames[i_area], showsig=True, leg_labels=trace_names, show_leg=False)
 
     _finalplotadjustments(f, maintitle)
-    D.savefig(f'{savefolder}/all2')
+    U.savefig(f'{savefolder}/all2')
 
 
 def PlotDist(dists, savefolder):
@@ -533,99 +159,6 @@ def PlotDist(dists, savefolder):
     plt.legend()
     plt.xlim(xmin=0)
     D.savefig(f'{savefolder}/dist')
-
-def OverviewVis(all_avgs, all_sems, sigclusters, saveprefix, trialnumber, datatypelabel2, savefolder):
-    if saveprefix == 'r':
-        datatypelabel = 'reward'
-    else:
-        datatypelabel = 'q-value'
-
-    num_x = 4
-    num_timepoints = D.smooth_outputlength
-
-    # Now stich together into one big trace for each area
-    all_avgs = np.swapaxes(all_avgs, 0, 2)
-    all_sems = np.swapaxes(all_sems, 0, 2)
-    sigclusters = np.swapaxes(sigclusters, 0, 2)
-
-    buffer = 10  # Gap between each task event
-    numpoints = num_timepoints * D.numtrialepochs + buffer * (D.numtrialepochs - 1)
-    binlength = num_timepoints+buffer
-
-    # Static plot parameters
-    xlabels = [name for name in D.names_epochs]
-    xtickpos = [int((i_epoch + 0.1) * binlength) for i_epoch in range(D.numtrialepochs)]
-    labels = ('Repeat common', 'Repeat rare', 'Switch common', 'Switch rare')
-    labels_twolines = ('Repeat\ncommon', 'Repeat\nrare', 'Switch\ncommon', 'Switch\nrare')
-
-    def makeandplotavgs(ax, i_trialoffset, tr_offset, ylab, sigmarkers, betas_avgs, betas_sems, leg):
-        avgs = np.empty((num_x, numpoints))
-        avgs.fill(np.nan)
-        sems = np.copy(avgs)
-        sigmarker = np.zeros(numpoints)
-
-        for i_epoch in range(D.numtrialepochs):
-            start = i_epoch * binlength
-            fin = i_epoch * binlength + num_timepoints
-
-            sigmarker[start:fin] = sigmarkers[i_abs, i_epoch + tr_offset]
-
-            for i_beta in range(num_x):
-                avgs[i_beta, start:fin] = betas_avgs[i_abs, i_epoch + tr_offset, i_beta]
-                sems[i_beta, start:fin] = betas_sems[i_abs, i_epoch + tr_offset, i_beta]
-
-        sigmarker *= np.nanmax(avgs)
-        sigmarker[sigmarker==0] = np.nan
-        sigmarker += 0.05
-        if leg:
-            ax.plot(sigmarker, color='black', lw=2, label='Significant')
-        else:
-            ax.plot(sigmarker, color='black', lw=2)
-
-        for i_beta, (avg, sem, label) in enumerate(zip(avgs, sems, labels)):
-            plotpanel(ax, avg, sem, i_trialoffset, ylab, leg, i_beta)
-
-
-    def plotpanel(ax, avg, sem, pos, ylab, leg, colornumber):
-        if leg:
-            ax.plot(avg, label=labels[colornumber], color=f'C{colornumber}', lw=3)
-        else:
-            ax.plot(avg, color=f'C{colornumber}', lw=3)
-        ax.fill_between(range(len(avg)), avg - sem, avg + sem, alpha=0.15, color=f'C{colornumber}')
-        ax.set_xlim(0, numpoints)
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        ax.yaxis.set_ticks_position('left')
-        if pos != 3:
-            ax.spines['bottom'].set_visible(False)
-            ax.set_xticks([])
-        else:
-            ax.xaxis.set_ticks_position('bottom')
-        ax.set_ylabel(ylab, fontsize=11)
-        plt.xticks(xtickpos, xlabels, fontsize=11)
-        plt.yticks(fontsize=13)
-
-    def finalplotadjustments(f):
-        plt.suptitle(f' {datatypelabel2} for t+0 {datatypelabel} split by t+{trialnumber} behaviour ({area}){abstitle}', x=0.25, fontsize=18)
-        f.legend(loc='upper right', fancybox=True, shadow=True, ncol=5, bbox_to_anchor=(1, 1))
-        plt.tight_layout(rect=[0, 0, 1, 0.95])
-        plt.tick_params(axis='both', which='major', labelsize=13)
-
-
-    # 2x1 plot
-    for i_abs, (abslabel , abstitle) in enumerate(zip(('mean', 'abs'), ('', ' (absolute)'))):
-        for i_area, (area, betasonearea_avg, betasonearea_sem, clustersonearea) in enumerate(zip(D.areas, all_avgs, all_sems, sigclusters)):
-
-            f, axes = plt.subplots(3, 1, figsize=(15,9), sharex=True, sharey=True)
-
-            for i_trialoffset, (tr_offset, ax, ylab, leg) in enumerate(zip((0, D.numtrialepochs, D.numtrialepochs*2), axes, ('t+0', 't+1', 't+2'), (True, False, False))):
-                makeandplotavgs(ax, i_trialoffset, tr_offset, ylab, clustersonearea, betasonearea_avg, betasonearea_sem, leg)
-
-            finalplotadjustments(f)
-            if abslabel == 'mean':
-                plt.savefig(f'{D.dir_savefig}/overview/{savefolder}/{saveprefix}/{trialnumber}_{area}_{abslabel}')
-            plt.close('all')
-
 
 def Rsa(rsa, area, suffix=''):
     # First remove diagonal ones
