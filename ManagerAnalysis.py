@@ -42,13 +42,17 @@ class Run:
             data = ImportData.EntireArea(area)
 
             counter = m.np_zeros(data.n)
+            counter = np.zeros(data.n)
             betas = m.np_zeros((num_rows, num_conds, D.numtrialepochs, data.n, D.num_timepoints))
+            betas = np.zeros((num_rows, num_conds, D.numtrialepochs, data.n, D.num_timepoints))
 
-            pool = Pool(5)
-            func = partial(function_to_run, counter, betas, data)
-            run_list = range(data.n)
-            pool.map(func, run_list)
-            pool.close()
+            for i in range(data.n):
+                function_to_run(counter, betas, data, i)
+            #pool = Pool(5)
+            #func = partial(function_to_run, counter, betas, data)
+            #run_list = range(data.n)
+            #pool.map(func, run_list)
+            #pool.close()
 
             betas = np.array(betas)
 

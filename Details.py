@@ -4,7 +4,7 @@ areas = ['DMStr', 'DLPFC', 'DLStr', 'ACC', 'FP']  # DMStr = caudate, DLStr = put
 areanames = ['Caudate', 'DLPFC', 'Putamen', 'ACC', 'FP']  # DMStr = caudate, DLStr = putamen
 numareas = len(areas)
 names = ['Charlie', 'Jacob']
-dir_main = 'C:/James/Data/TwoStep/'
+dir_main = '/Users/tmuller/Documents/TwoStep/'
 dir_subjs = (dir_main+'CharlieData/', dir_main+'JacobData/')
 dir_qvals = [dir_subjs[i]+'qvals/qvals_sess_' for i in range(2)]
 dir_spikes = (dir_main + 'CharlieData/neuronaldata/', dir_main+'JacobData/neuronaldata/')
@@ -56,8 +56,8 @@ def converttimetosmoothedtrace(time):
 numperms = 1000
 
 # Rsa
-rsa_start = converttimetosmoothedtrace(100)
-rsa_stop = converttimetosmoothedtrace(500)
+rsa_start = converttimetosmoothedtrace(200)
+rsa_stop = converttimetosmoothedtrace(600)
 rsa_norm_method = 'normalise'
 
 # Trial epochs
