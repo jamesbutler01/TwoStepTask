@@ -3,6 +3,7 @@ import numpy as np
 import multiprocessing.managers
 import ShiftTrials
 import Utils
+import Plot
 Shifter = ShiftTrials.Shift(2)
 
 
@@ -46,4 +47,5 @@ if __name__ == "__main__":
     trace_names = ('A(2)_AR', 'A(2)_AC', 'A(low)_AR', 'A(low)_AC')
     num_conds = len(trace_names)
     num_rows = 1
-    ManagerAnalysis.Run(analysecell, True, num_conds, num_rows, maintitle, ytitles, savefolder, trace_names)
+    plotfunc = Plot.GeneralPlot
+    ManagerAnalysis.Run(analysecell, True, num_conds, num_rows, maintitle, ytitles, savefolder, trace_names, plotfunc)

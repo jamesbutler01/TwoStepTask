@@ -4,6 +4,7 @@ import multiprocessing.managers
 import ShiftTrials
 import Utils
 import Maths
+import Plot
 Shifter = ShiftTrials.Shift(2)
 
 
@@ -40,4 +41,5 @@ if __name__ == "__main__":
     trace_names = ('A(x)_AR', 'A(x)_AC', 'A(x)_BR', 'A(x)_BC')
     num_conds = len(trace_names)
     num_rows = 1
-    ManagerAnalysis.Run(analysecell, True, num_conds, num_rows, maintitle, ytitles, savefolder, trace_names)
+    plotfunc = Plot.GeneralPlot
+    ManagerAnalysis.Run(analysecell, False, num_conds, num_rows, maintitle, ytitles, savefolder, trace_names, plotfunc)

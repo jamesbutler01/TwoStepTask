@@ -31,7 +31,7 @@ if False:
 
 class Run:
 
-    def __init__(self, function_to_run, run_sig_test, num_conds, num_rows, maintitle, ytitles, savefolder, trace_names, doavgs=True):
+    def __init__(self, function_to_run, run_sig_test, num_conds, num_rows, maintitle, ytitles, savefolder, trace_names, plotfunc, doavgs=True):
         timer = TimeFunction.Timer()
 
         m = MyManager()
@@ -71,5 +71,5 @@ class Run:
 
         print(timer.elapsedtime())
 
-        Plot.GeneralPlot(all_avgs, all_sem, sigclusters, trace_names, savefolder, ytitles, maintitle)
+        plotfunc(all_avgs, all_sem, sigclusters, trace_names, savefolder, ytitles, maintitle)
 

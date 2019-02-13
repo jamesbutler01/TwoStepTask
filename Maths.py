@@ -80,12 +80,12 @@ def fr(x_val, y_val):
 
 #@jit(nopython=True)
 def jit_regression(x_val, y_val):
-    model = np.linalg.lstsq(x_val, y_val)[0]
+    model = np.linalg.lstsq(x_val, y_val, rcond=None)[0]
     return model[1]
 
 #@jit(nopython=True)
 def get_pred_vals(x_val, y_val):
-    model = np.linalg.lstsq(x_val, y_val)[0]
+    model = np.linalg.lstsq(x_val, y_val, rcond=None)[0]
     return x_val[:,1]*model[1] + model[0]
 
 #@jit(nopython=True)
