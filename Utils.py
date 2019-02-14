@@ -29,12 +29,14 @@ def normalisedata(arr):
         raise Exception('Error!')
     return arr
 
-def savefig(savedir):
+
+def savefig(savedir, name):
     path = f'{D.dir_savefig}{savedir}'
     if not os.path.exists(path):
         os.makedirs(path)
-    plt.savefig(path)
+    plt.savefig(f'{path}/{name}')
     plt.close('all')
+
 
 def getavgfr(sc, data, cell):
     fr = data.generatenormalisedepoch(cell, sc)

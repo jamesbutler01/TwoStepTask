@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import Details as D
 import Utils as U
+
 # Static plot parameters
 buffer = 10  # Gap between each task event
 numpoints = D.num_timepoints * D.numtrialepochs + buffer * D.numtrialepochs
@@ -72,6 +73,7 @@ def _makeandplotcounts(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labels, s
     for i_trace, (avg_in, sem, label) in enumerate(zip(avgs, sems, leg_labels)):
         _plotpanel(ax, avg_in, sem, i_trace, ylab, label, show_leg)
 
+
 def _plotpanel(ax, avg, sem, num, ylab, label, show_leg):
     if show_leg:
         ax.plot(avg, label=f'{label}', color=f'C{num}', lw=3)
@@ -88,6 +90,7 @@ def _plotpanel(ax, avg, sem, num, ylab, label, show_leg):
     ax.set_xticks([])
     plt.yticks(fontsize=13)
 
+
 def _finalplotadjustments(f, title):
     plt.xticks(xtickpos, D.names_epochs, fontsize=11)
 
@@ -95,7 +98,6 @@ def _finalplotadjustments(f, title):
     f.legend(loc='upper right', fancybox=True, shadow=True, ncol=5, bbox_to_anchor=(1, 1))
     plt.tight_layout(rect=[0, 0, 1, 0.95])
     plt.tick_params(axis='both', which='major', labelsize=13)
-
 
 
 def GeneralPlot(avgs, sems, sigclusters, trace_names, savefolder, ytitles, maintitle):
@@ -115,7 +117,7 @@ def GeneralPlot(avgs, sems, sigclusters, trace_names, savefolder, ytitles, maint
 
         title = maintitle+ f' ({area})'
         _finalplotadjustments(f, title)
-        U.savefig(f'{savefolder}/{area}')
+        U.savefig(savefolder, area)
 
 
 def GeneralAllAreas(avgs, sems, sigclusters, trace_names, savefolder, ytitles, maintitle):
@@ -134,7 +136,7 @@ def GeneralAllAreas(avgs, sems, sigclusters, trace_names, savefolder, ytitles, m
             _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=D.areanames[i_area], showsig=True, leg_labels=trace_names, show_leg=False)
 
     _finalplotadjustments(f, maintitle)
-    U.savefig(f'{savefolder}/all')
+    U.savefig(savefolder, 'all')
 
     f, axes_all = plt.subplots(D.numareas, 1, figsize=(width_regplot, height_regplot*D.numareas), sharex=True)
 
@@ -145,7 +147,8 @@ def GeneralAllAreas(avgs, sems, sigclusters, trace_names, savefolder, ytitles, m
             _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=D.areanames[i_area], showsig=True, leg_labels=trace_names, show_leg=False)
 
     _finalplotadjustments(f, maintitle)
-    U.savefig(f'{savefolder}/all2')
+
+    U.savefig(savefolder, 'all2')
 
 
 def PlotDist(dists, savefolder):
@@ -159,126 +162,4 @@ def PlotDist(dists, savefolder):
     plt.legend()
     plt.xlim(xmin=0)
     D.savefig(f'{savefolder}/dist')
-
-def Rsa(rsa, area, suffix=''):
-    # First remove diagonal ones
-    np.fill_diagonal(rsa, np.nan)
-    if suffix == '':
-        labels = ['C1_0', 'C1_1', 'S2_0', 'S2_1', 'C2_2', 'C2_3', 'C2_4', 'C2_5']
-    elif suffix == 'ext':
-        labels = ['C1_0', 'C1_1', 'S2_0_com', 'S2_1_rare', 'S2_1_com', 'S2_0_rare',
-                  'C2_2_com', 'C2_3_com', 'C2_4_com', 'C2_5_com', 'C2_2_rare',
-                  'C2_3_rare', 'C2_4_rare', 'C2_5_rare']
-    elif suffix == 'ext1':
-        labels = ['fix0', 'C1_0', 'C1_1',
-                  'trans_0_com', 'trans_1_rare', 'trans2_1_com', 'trans_0_rare',
-                  'fix1',
-                  'S2_0_com', 'S2_1_rare', 'S2_1_com', 'S2_0_rare',
-                  'C2_2_com', 'C2_3_com', 'C2_4_com', 'C2_5_com', 'C2_2_rare',
-                  'C2_3_rare', 'C2_4_rare', 'C2_5_rare', '2ndaryReinforcer']
-    elif suffix == 'noC1':
-        labels = ['trans_0_com', 'trans_1_rare', 'trans2_1_com', 'trans_0_rare',
-                  'fix1',
-                  'S2_0_com', 'S2_1_rare', 'S2_1_com', 'S2_0_rare',
-                  'C2_2_com', 'C2_3_com', 'C2_4_com', 'C2_5_com', 'C2_2_rare',
-                  'C2_3_rare', 'C2_4_rare', 'C2_5_rare', '2ndaryReinforcer']
-    elif suffix == 'justC1':
-        labels = ['C1_0', 'C1_1', 'S2_0_com', 'S2_1_rare', 'S2_1_com', 'S2_0_rare']
-    elif suffix == 'justC2':
-        labels = ['C2_2_com', 'C2_3_com', 'C2_4_com', 'C2_5_com', 'C2_2_rare',
-                  'C2_3_rare', 'C2_4_rare', 'C2_5_rare']
-
-    plt.figure(figsize=(9, 6))
-    # im = plt.imshow(rsa, cmap=plt.get_cmap('bwr'), vmin=zmin, vmax=zmax)
-    im = plt.imshow(rsa, cmap=plt.get_cmap('bwr'))
-    plt.suptitle('RSA ' + area)
-    plt.colorbar(im, label='Correlation')
-    plt.xticks(range(len(labels)), labels, rotation=90)
-    plt.yticks(range(len(labels)), labels)
-    plt.tight_layout(rect=[0, 0, 1, 0.95])
-    plt.savefig(f'{D.dir_savefig}rsa/{suffix}_{area}')
-    plt.close('all')
-
-
-def RsaCaC2(rsa, area, suffix, period):
-    # First remove diagonal ones
-    np.fill_diagonal(rsa, np.nan)
-
-    if suffix == 'rewhist0':
-        labels = ['Rew0', 'Rew1', 'Rew2', 'C2_0', 'C2_1', 'C2_2']
-        title = f'Prev reward values for choice2 (depth 1) (Period: {period}) '
-    elif suffix == 'rewhist1':
-        labels = ['Rew0', 'Rew1', 'Rew2', 'C2_0_0', 'C2_0_1', 'C2_0_2', 'C2_1_0', 'C2_1_1', 'C2_1_2', 'C2_2_0', 'C2_2_1', 'C2_2_2']
-        title = f'Prev reward values for choice2 (depth 2) (Period: {period}) '
-    elif suffix == 'rewhist2':
-        labels = [f'{a}_{b}_{c}' for a in range(3) for b in range(3) for c in range(3)]
-        labels = [f'{a}_{b}' for a in range(3) for b in range(3)]
-        title = f'Prev reward values for choice2 (depth 3) (Period: {period}) '
-    elif suffix == 'rewhisttrans0':
-        labels = ['C2_0_com', 'C2_1_com', 'C2_2_com', 'C2_0_rare', 'C2_1_rare', 'C2_2_rare']
-        title = f'Prev reward values for choice2 (depth 1) (Period: {period}) '
-    elif suffix == 'rewhisttrans1':
-        labels = ['C2_0_0_com', 'C2_0_1_com', 'C2_0_2_com', 'C2_1_0_com', 'C2_1_1_com', 'C2_1_2_com', 'C2_2_0_com', 'C2_2_1_com', 'C2_2_2_com', 
-                  'C2_0_0_rare', 'C2_0_1_rare', 'C2_0_2_rare', 'C2_1_0_rare', 'C2_1_1_rare', 'C2_1_2_rare', 'C2_2_0_rare', 'C2_2_1_rare', 'C2_2_2_rare']
-        title = f'Prev reward values for choice2 by transition (depth 2) (Period: {period}) '
-    elif suffix == 'rew_trans0':
-        title = f'Reward by transition by choice at choice1 (depth 1) (Period: {period}) '
-        labels = ['rew0_rep_com', 'rew0_rep_rare', 'rew0_switch_com', 'rew0_switch_rare',
-                  'rew1_rep_com', 'rew1_rep_rare', 'rew1_switch_com', 'rew1_switch_rare',
-                  'rew2_rep_com', 'rew2_rep_rare', 'rew2_switch_com', 'rew2_switch_rare']
-    elif suffix == 'betas0':
-        title = f'Betas by transition by choice at choice1 (depth 1) (Period: {period}) '
-        labels = ('Repeat common', 'Repeat rare', 'Switch common', 'Switch rare')
-    elif suffix == 'rewhist3':
-        labels = ['0 0', '0 1', '0 2', '1 0', '1 1', '1 2', '2 0', '2 1', '2 2', ]
-        title = f'Change in prev reward values for choice2 (depth 1) (Period: {period}) '
-    elif suffix == 'rewhistchange0' or suffix == 'rewhistchange1':
-        prevchoicevalues = np.empty((27, 3))
-        rew_hist_diffs0 = np.empty((27, 1))
-        rew_hist_diffs1 = np.empty((27, 2))
-        a = -1
-        b = -1
-        c = -1
-        for i in range(27):
-            if i % 3 == 0:
-                c += 1
-            if i % 9 == 0:
-                b += 1
-                c = 0
-            if i % 27 == 0:
-                b = 0
-                c = 0
-                a += 1
-            prevchoicevalues[i, 0] = a
-            prevchoicevalues[i, 1] = b
-            prevchoicevalues[i, 2] = c
-            #prevchoicevalues[i, 3] = i % 3
-            rew_hist_diffs0[i] = np.diff(prevchoicevalues[i][0:2])
-            rew_hist_diffs1[i] = np.diff(prevchoicevalues[i])
-
-        unique_rewhistchanges1 = np.array(np.unique(rew_hist_diffs1, axis=0), dtype=int)
-        title = f'Change in prev reward values for choice2 (depth 2) (Period: {period}) '
-        labels = unique_rewhistchanges1
-    elif suffix[:6] == 'areas_':
-        labels = D.areanames
-        title = f'Similarity between areas for {period}{suffix}'
-
-
-    plt.figure(figsize=(9, 6))
-    im = plt.imshow(rsa, cmap=plt.get_cmap('bwr'))
-    plt.suptitle(title + area)
-    plt.colorbar(im, label='Correlation')
-    plt.xticks(range(len(labels)), labels, rotation=90)
-    plt.yticks(range(len(labels)), labels)
-    plt.tight_layout(rect=[0, 0, 1, 0.95])
-    plt.savefig(f'{D.dir_savefig}rsa/c2/{period}/{suffix}/{area}')
-    plt.close('all')
-
-
-
-
-
-
-
-
 
