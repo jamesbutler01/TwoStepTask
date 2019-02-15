@@ -119,15 +119,15 @@ def permtest(arr):
         epoch_buff = np.copy(epoch)
         dist = m.np_zeros(D.numperms)
 
-        pool = Pool(5)
-        func = partial(doperms, epoch_buff, dist)
-        run_list = range(D.numperms)
-        pool.map(func, run_list)
-        pool.close()
-        #
-        # dist = np.empty(D.numperms)
-        # for i in range(D.numperms):
-        #     doperms(epoch_buff, dist, i)
+        # pool = Pool(5)
+        # func = partial(doperms, epoch_buff, dist)
+        # run_list = range(D.numperms)
+        # pool.map(func, run_list)
+        # pool.close()
+
+        dist = np.empty(D.numperms)
+        for i in range(D.numperms):
+            doperms(epoch_buff, dist, i)
 
         dist = np.sort(np.array(dist))
 

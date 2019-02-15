@@ -1,5 +1,7 @@
 import numpy as np
 
+domultiproc = True
+
 areas = ['DMStr', 'DLPFC', 'DLStr', 'ACC', 'FP']  # DMStr = caudate, DLStr = putamen
 areanames = ['Caudate', 'DLPFC', 'Putamen', 'ACC', 'FP']  # DMStr = caudate, DLStr = putamen
 numareas = len(areas)
