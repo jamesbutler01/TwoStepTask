@@ -264,13 +264,15 @@ def rundecoder(x, y, decoder):
         x = x[:, :np.min(np.where(np.isnan(x))[1])]
         y = y[:, :np.min(np.where(np.isnan(y))[1])]
 
+    # Make buffer array to hold the values once they are generated
     score = np.empty(D.dec_numiters_traintestsplit)
 
     for i in range(D.dec_numiters_traintestsplit):
+
         # Randomly split into train and test
         x_train, x_test, y_train, y_test = splitdata(x, y)
 
-        # Keep resampling until test set has even number of the different labels
+        # Check test set has even number of the different categories
         if np.sum(np.diff([np.sum(x_test[:, 0]==x_v) for x_v in np.unique(x_test[:, 0])])) != 0 or len(np.unique(x_test[:, 0])) == 1:
             raise Exception('Uneven number of samples in test group')
 

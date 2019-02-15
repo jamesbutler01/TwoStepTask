@@ -72,14 +72,15 @@ def analysearea(unique_func, num_conds, accs_all, sems_all, run_sig_test, sigclu
     y_all.fill(np.nan)
     x_all.fill(np.nan)
 
-    # Do multiple loops with different subsets of cells
+    # If we have included all cells then we don't need to iterate over different sub populations
     numiters = D.dec_numiters_cellselection
     if int(np.mean(validcells) * 100) == 100:
         numiters = 1
 
     accs_perms = np.empty((num_conds, D.numtrialepochs, D.num_timepoints, numiters))
 
-    for i_cellselection in range(D.dec_numiters_cellselection):
+    # Do multiple loops with different subsets of cells
+    for i_cellselection in range(numiters):
 
         for i_cell, cell in enumerate(np.where(validcells == 1)[0]):
 
@@ -110,7 +111,7 @@ def analysearea(unique_func, num_conds, accs_all, sems_all, run_sig_test, sigclu
         accs_perms[:, :, :, i_cellselection], sem_traintestsplit = Maths.decode_across_epochs(x_all, y_all, decoder)
 
         if i_area == 0:
-            print(f'Progress: {i_cellselection}/{numiters}')
+            print(f'Progress: {i_cellselection+1}/{numiters}')
 
     accs = np.mean(accs_perms, axis=3)
     accs_all[i_area, 0] = accs

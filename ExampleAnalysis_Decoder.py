@@ -1,17 +1,17 @@
 import Details as D
 
-def createmasks(td):
+def createmasks(trialdata):
 
     # Specify x data used as class labels by the decoder
-    x_data = td.rew_coll  # Let's look at value coding
+    x_data = trialdata.rew_coll  # Let's look at value coding
 
     # Then specify masks for your different conditions to compare
 
     # Let's compare rare versus common trials
-    common_trials = td.transition == 1
-    rare_trials = td.transition == 2
+    common_trials = trialdata.transition == 1
+    rare_trials = trialdata.transition == 2
 
-    # Put different conditions into a list
+    # Put the different conditions into a single list
     conds = (common_trials, rare_trials)
 
     # Return x data and conditions
