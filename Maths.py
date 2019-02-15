@@ -259,6 +259,7 @@ def decode_across_epochs(x, y, decoder):
 
 
 def rundecoder(x, y, decoder):
+    # Clip off trailing nans from holding array input
     if np.isnan(x).any():
         x = x[:, :np.min(np.where(np.isnan(x))[1])]
         y = y[:, :np.min(np.where(np.isnan(y))[1])]
@@ -266,23 +267,12 @@ def rundecoder(x, y, decoder):
     score = np.empty(D.dec_numiters_traintestsplit)
 
     for i in range(D.dec_numiters_traintestsplit):
-
         # Randomly split into train and test
-        x_train, x_test, y_train, y_test = train_test_split(x.T, y.T, test_size=D.dec_test_size)
-        x_clip = np.copy(x_test[:, 0])
-        if len(x_clip) % 2 == 1:
-            x_clip = x_clip[:-1]
+        x_train, x_test, y_train, y_test = splitdata(x, y)
 
         # Keep resampling until test set has even number of the different labels
-        counter = 0
-        while np.sum(np.diff([np.sum(x_clip==x_v) for x_v in np.unique(x_clip)])) != 0 or len(np.unique(x_clip)) == 1:
-            x_train, x_test, y_train, y_test = train_test_split(x.T, y.T, test_size=D.dec_test_size)
-            x_clip = np.copy(x_test[:, 0])
-            if len(x_clip) % 2 == 1:
-                x_clip = x_clip[:-1]
-            counter += 1
-            if counter > 999999:
-                raise Exception(f'1234{x_test}')
+        if np.sum(np.diff([np.sum(x_test[:, 0]==x_v) for x_v in np.unique(x_test[:, 0])])) != 0 or len(np.unique(x_test[:, 0])) == 1:
+            raise Exception('Uneven number of samples in test group')
 
         # Do decoding
         if decoder == 'Logistic Regression':
@@ -298,6 +288,20 @@ def rundecoder(x, y, decoder):
         score[i] = decode_inst.score(y_test, x_test[:, 0])
 
     return np.mean(score), sem(score)
+
+
+def splitdata(x, y):
+    x_train, x_test, y_train, y_test = train_test_split(x.T, y.T, test_size=D.dec_test_size, stratify=x.T)
+
+    # Ensure correct test sample size such that even number of each class
+    nudge = 0
+    while len(x_test[:, 0]) % len(np.unique(x_test[:, 0])) != 0:
+        nudge += 0.01
+        x_train, x_test, y_train, y_test = train_test_split(x.T, y.T, test_size=D.dec_test_size+nudge, stratify=x.T)
+        if nudge > 1:
+            raise Exception('while timeout')
+
+    return x_train, x_test, y_train, y_test
 
 
 def rsa(arr, second_arr, suffix, plotfunc, area):

@@ -72,7 +72,12 @@ def analysearea(unique_func, num_conds, accs_all, sems_all, run_sig_test, sigclu
     y_all.fill(np.nan)
     x_all.fill(np.nan)
 
-    accs_perms = np.empty((num_conds, D.numtrialepochs, D.num_timepoints, D.dec_numiters_cellselection))
+    # Do multiple loops with different subsets of cells
+    numiters = D.dec_numiters_cellselection
+    if int(np.mean(validcells) * 100) == 100:
+        numiters = 1
+
+    accs_perms = np.empty((num_conds, D.numtrialepochs, D.num_timepoints, numiters))
 
     for i_cellselection in range(D.dec_numiters_cellselection):
 
@@ -105,16 +110,16 @@ def analysearea(unique_func, num_conds, accs_all, sems_all, run_sig_test, sigclu
         accs_perms[:, :, :, i_cellselection], sem_traintestsplit = Maths.decode_across_epochs(x_all, y_all, decoder)
 
         if i_area == 0:
-            print(f'Progress: {i_cellselection}/{D.dec_numiters_cellselection}')
+            print(f'Progress: {i_cellselection}/{numiters}')
 
     accs = np.mean(accs_perms, axis=3)
     accs_all[i_area, 0] = accs
 
     std = np.nanstd(accs_perms, axis=3)
-    sem_cellselection = std / np.sqrt(D.dec_numiters_cellselection)
+    sem_cellselection = std / np.sqrt(numiters)
 
-    # Can either store the SEM for sampling different subsets of cells, or the SEM from different train/test splits of the data
-    sems_all[i_area, 0] = sem_traintestsplit
+    # Add the SEM for sampling different subsets of cells to the SEM from different train/test splits of the data
+    sems_all[i_area, 0] = sem_traintestsplit + sem_cellselection
 
     if run_sig_test:
         sigclusters[i_area, 0] = Maths.permtest(accs)
