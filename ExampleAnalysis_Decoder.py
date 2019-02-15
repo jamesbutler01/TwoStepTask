@@ -1,37 +1,30 @@
 import Details as D
-import numpy as np
 
 def createmasks(td):
 
-    x_data = td.c1chosen
+    # Specify x data used as class labels by the decoder
+    x_data = td.rew_coll  # Let's look at value coding
 
-    mask_aar = D.get_A_AR_trials(td)
-    mask_aac = D.get_A_AC_trials(td)
-    mask_abc = D.get_A_BC_trials(td)
+    # Then specify masks for your different conditions to compare
 
-    switchc1 = mask_abc | mask_aar
+    # Let's compare rare versus common trials
+    common_trials = td.transition == 1
+    rare_trials = td.transition == 2
 
-    masks = [(mask_aac & (td.rewgiven == 2) & (td.previousreward == 2)),
-             (mask_abc & (td.rewgiven == 2)& (td.previousreward != 2)),
-             (mask_abc & (td.rewgiven != 2)& (td.previousreward != 2))]
+    # Put different conditions into a list
+    conds = (common_trials, rare_trials)
 
-    mask_aac = D.get_A_AC_trials(td)
-    mask_abc = D.get_A_BC_trials(td)
-
-    masks = [(mask_aac & (td.previousreward == 2)),
-             (mask_abc & (td.previousreward == 2))]
-
-    return x_data, masks
+    # Return x data and conditions
+    return x_data, conds
 
 
 if __name__ == "__main__":
     import ManagerDecoder
 
-    maintitle = 'Decoding t0 choice1 on t0'
-    ytitles = 'Accuracy'
-    savefolder = 'dec/c1/id/B(high)_B(low)'
-    trace_names = ['A(high)_A(high)', 'A(low)_B(high)', 'A(low)_B(low)']
-    trace_names = ['A(high)_A', 'A(high)_B']
+    maintitle = 'Decoding reward on common vs rare trials'
+    ytitles = 'Accuracy (%)'
+    savefolder = 'dec/rew'
+    trace_names = ['Common trials', 'Rare trials']
     num_conds = len(trace_names)
     num_rows = 1
     decoder = D.decoders[1]
