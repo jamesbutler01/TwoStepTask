@@ -107,29 +107,34 @@ def regression(x_val, y_val):
     return jit_regression(x_val, y_val)
 
 
-def permtest(arr):
+def permtest(arr, multiproc=True):
     out = np.empty((arr.shape[1], arr.shape[3]))
     arr = np.swapaxes(arr, 0, 1)  # To index by trial epoch
 
-    m = MyManager()
-    m.start()
+    if multiproc:
+        m = MyManager()
+        m.start()
 
     for i_epoch, epoch in enumerate(arr):
+
         # Get distribution
         epoch_buff = np.copy(epoch)
-        dist = m.np_zeros(D.numperms)
 
-        # pool = Pool(5)
-        # func = partial(doperms, epoch_buff, dist)
-        # run_list = range(D.numperms)
-        # pool.map(func, run_list)
-        # pool.close()
+        if multiproc:
 
-        dist = np.empty(D.numperms)
-        for i in range(D.numperms):
-            doperms(epoch_buff, dist, i)
+            dist = m.np_zeros(D.numperms)
+            pool = Pool(5)
+            func = partial(doperms, epoch_buff, dist)
+            run_list = range(D.numperms)
+            pool.map(func, run_list)
+            pool.close()
+            dist = np.sort(np.array(dist))
 
-        dist = np.sort(np.array(dist))
+        else:
+
+            dist = np.empty(D.numperms)
+            for i in range(D.numperms):
+                doperms(epoch_buff, dist, i)
 
         # Observed
         sigcluster, clusterlength = findsignificancecluster(epoch)
@@ -139,7 +144,7 @@ def permtest(arr):
 
         out[i_epoch] = sigcluster
 
-    return out
+    return np.array(out)
 
 
 def doperms(arr, out, pos):
@@ -153,7 +158,10 @@ def findsignificancecluster(arr):
     for t_i, t in enumerate(arr):
         # Remove any cells that had nan's
         t = t[~np.isnan(t).any(axis=1)]
+
         pvals[t_i] = anova(t.T)
+    if len(pvals[~np.isnan(pvals)]) != len(pvals):
+        raise Exception('Invalid data - nans present')
     pvalsbool = np.array(pvals < 0.05, dtype=int)
     return findlongestrun(pvalsbool)
 
@@ -196,7 +204,12 @@ def anova(arr):
     def _sum_of_squares(a):
         return np.sum(a * a, 0)
 
+    # If all inputs equivalent return 0, not nan as default behaviour
+    if sum([(arr[0] == x).all() for x in arr[1:]]) == len(arr)-1:
+        return 0
+
     args = [np.asarray(arg, dtype=float) for arg in arr]
+
     # ANOVA on N groups, each in its own array
     num_groups = len(args)
     alldata = np.concatenate(args)
@@ -223,7 +236,8 @@ def anova(arr):
     msb = ssbn / float(dfbn)
     msw = sswn / float(dfwn)
     f = msb / msw
-
+    if f < 0:  # correct rounding errors :/
+        f = 0
     prob = special.fdtrc(dfbn, dfwn, f)  # equivalent to stats.f.sf
 
     return prob
@@ -242,13 +256,13 @@ def normalisedata(arr):
 
 
 def decode_across_epochs(x, y, decoder):
-    numchoices = y.shape[1]
+    numconds = y.shape[1]
 
-    accuracies = np.empty((numchoices, D.numtrialepochs, D.num_timepoints))
-    sems = np.empty((numchoices, D.numtrialepochs, D.num_timepoints))
+    accuracies = np.empty((numconds, D.numtrialepochs, D.num_timepoints, D.dec_numiters_traintestsplit))
+    sems = np.empty((numconds, D.numtrialepochs, D.num_timepoints))
 
     for epoch in range(D.numtrialepochs):
-        for choice in range(numchoices):
+        for choice in range(numconds):
             for ti in range(D.num_timepoints):
                 y_aar = y[epoch, choice, :, :, ti]  # y by trials
                 x_aar = x[epoch, choice, :, :]  # y by trials
@@ -289,7 +303,7 @@ def rundecoder(x, y, decoder):
         # Log score of model
         score[i] = decode_inst.score(y_test, x_test[:, 0])
 
-    return np.mean(score), sem(score)
+    return score, sem(score)
 
 
 def splitdata(x, y):

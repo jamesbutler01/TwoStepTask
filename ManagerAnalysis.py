@@ -1,12 +1,9 @@
 import ImportData
 import Details as D
 import numpy as np
-from functools import partial
-from multiprocessing import Process, Pool
 import multiprocessing.managers
 import Maths
 import TimeFunction
-import Plot
 import Utils
 
 class MyManager(multiprocessing.managers.BaseManager):

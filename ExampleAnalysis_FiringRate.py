@@ -15,7 +15,8 @@ MyManager.register('np_zeros', np.zeros, multiprocessing.managers.ArrayProxy)
 
 
 def analysecell(counter, output_frs, data, cell):
-    # Print current progress in console
+
+    # Print current proggress in console
     Utils.updatecounts(counter, cell, data.n)
 
     # Load trial data

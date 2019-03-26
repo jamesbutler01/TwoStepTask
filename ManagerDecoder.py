@@ -108,7 +108,9 @@ def analysearea(unique_func, num_conds, accs_all, sems_all, run_sig_test, sigclu
                             ind_inc_trials]
                         x_all[i_epoch, i, i_cell, min_trials * (i_x):min_trials * (i_x + 1)] = i_x
 
-        accs_perms[:, :, :, i_cellselection], sem_traintestsplit = Maths.decode_across_epochs(x_all, y_all, decoder)
+        avgs, sem_traintestsplit = Maths.decode_across_epochs(x_all, y_all, decoder)
+
+        accs_perms[:, :, :, i_cellselection] = np.mean(avgs, axis=3)
 
         if i_area == 0:
             print(f'Progress: {i_cellselection+1}/{numiters}')
@@ -123,13 +125,22 @@ def analysearea(unique_func, num_conds, accs_all, sems_all, run_sig_test, sigclu
     sems_all[i_area, 0] = sem_traintestsplit + sem_cellselection
 
     if run_sig_test:
-        sigclusters[i_area, 0] = Maths.permtest(accs)
+
+        if D.dec_numiters_traintestsplit < 4:
+            raise Exception('Not enough permutations for states (D.dec_numiters_traintestsplit)')
+
+        # Do sig test between different traintestsplit runs of the decoder (?)
+        sigdata = np.swapaxes(avgs, -1, -2)
+        sigclusters[i_area, 0] = Maths.permtest(sigdata, multiproc=False)
 
 
 class Run:
 
     def __new__(cls, function_to_run, run_sig_test, num_conds, num_rows, maintitle, ytitles, savefolder, trace_names, decoder, minsamples=4):
         timer = TimeFunction.Timer()
+
+        if num_rows > 1:
+            raise Exception('Multiple rows not implemented yet')
 
         m = MyManager()
         m.start()

@@ -155,7 +155,6 @@ class GetBehavInfoForCell:
         self.transition = np.array(struct[subj][0][sess][0][D.ind_transition].flatten(), dtype=int)
         self.c1dir = np.array(struct[subj][0][sess][0][D.ind_sidechosen1].flatten(), dtype=int)
         self.c2dir = np.array(struct[subj][0][sess][0][D.ind_sidechosen2].flatten(), dtype=int)
-        self.transition = np.array(struct[subj][0][sess][0][D.ind_transition].flatten(), dtype=int)
         self.choice1 = np.array(struct[subj][0][sess][0][D.ind_picchosen1].flatten(), dtype=int)
         self.c1chosen = self.choice1
         self.c1given = np.empty(self.c1chosen.shape, dtype=int)
