@@ -178,6 +178,7 @@ class GetBehavInfoForCell:
             return output
 
         self.previousreward = makeprevarr(1, self.rewgiven)
+        self.previousrewardcoll = makeprevarr(1, self.rew_coll)
         self.previouschoice2 = makeprevarr(1, self.choice2)
         self.previouschoice1g = makeprevarr(1, self.c1given)
         self.previouschoice1c = makeprevarr(1, self.c1chosen)

@@ -1,4 +1,6 @@
 import numpy as np
+import Details as D
+import os
 
 domultiproc = True
 
@@ -79,6 +81,14 @@ dec_numiters_traintestsplit = 6
 dec_numiters_cellselection = 5
 dec_test_size = 0.2
 decoders = ('Logistic Regression', 'SVM', 'LDA')
+
+def savefig_makefolder(savedir, name):
+    path = f'{D.dir_savefig}{savedir}'
+    if not os.path.exists(path):
+        os.makedirs(path)
+    import matplotlib.pyplot as plt
+    plt.savefig(f'{path}/{name}')
+    plt.close('all')
 
 
 def savefig(savedir):

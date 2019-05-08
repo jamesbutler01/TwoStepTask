@@ -204,9 +204,9 @@ def anova(arr):
     def _sum_of_squares(a):
         return np.sum(a * a, 0)
 
-    # If all inputs equivalent return 0, not nan as default behaviour
-    if sum([(arr[0] == x).all() for x in arr[1:]]) == len(arr)-1:
-        return 0
+    # # If all inputs equivalent return 0, not nan as default behaviour
+    # if sum([(np.asarray(arr[0]) == x).all() for x in arr[1:]]) == len(arr)-1:
+    #     return 0
 
     args = [np.asarray(arg, dtype=float) for arg in arr]
 
