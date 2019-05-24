@@ -77,8 +77,7 @@ sigthreshold = numperms * 0.005  # .05% p-value
 sigthreshold = numperms * 0.025  # 2.5% p-value
 
 # Decoder
-dec_numiters_traintestsplit = 6
-dec_numiters_cellselection = 5
+dec_numiters = 10
 dec_test_size = 0.2
 decoders = ('Logistic Regression', 'SVM', 'LDA')
 

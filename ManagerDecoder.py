@@ -51,7 +51,7 @@ def analysearea(unique_func, num_conds, accs_all, sems_all, run_sig_test, sigclu
             # If lower than current lowest store it
             if this_min < cell_min:
                 cell_min = this_min
-        
+
         # Store data to plot
         dists_all[i_area, cell] = cell_min
         
@@ -65,22 +65,19 @@ def analysearea(unique_func, num_conds, accs_all, sems_all, run_sig_test, sigclu
     
     # Now we know the maximum of trials to use with the decoder
     print(f'Area: {D.areas[i_area]} has {min_across_cells} minimum samples, {int(np.mean(validcells)*100)}% cells included ({sum(validcells)})')
-  
-    # If we have included all cells then we don't need to iterate over different sub populations
-    numiters = D.dec_numiters_cellselection
-    if False not in validcells:
-        numiters = 1
-    
+
     # Make holding arrays for analysis
-    accs_perms = np.empty((num_conds, D.numtrialepochs, D.num_timepoints, numiters))
-    y_all = np.empty((D.numtrialepochs, num_conds, sum(validcells), min_across_cells * np.max(numitems), D.num_timepoints))
-    x_all = np.empty((D.numtrialepochs, num_conds, sum(validcells), min_across_cells * np.max(numitems)))
-    y_all.fill(np.nan)
-    x_all.fill(np.nan)
+    accs_perms = np.empty((num_conds, D.numtrialepochs, D.num_timepoints, D.dec_numiters))
+
 
     # Do multiple loops with different subsets of cells
-    for i_cellselection in range(numiters):
-        
+    for i_cellselection in range(D.dec_numiters):
+        y_all = np.empty(
+            (D.numtrialepochs, num_conds, sum(validcells), min_across_cells * np.max(numitems), D.num_timepoints))
+        x_all = np.empty((D.numtrialepochs, num_conds, sum(validcells), min_across_cells * np.max(numitems)))
+        y_all.fill(np.nan)
+        x_all.fill(np.nan)
+
         # Loop to collect all the data from the different cells that had enough trials
         for i_cell, cell in enumerate(np.where(validcells == 1)[0]):
 
@@ -117,30 +114,30 @@ def analysearea(unique_func, num_conds, accs_all, sems_all, run_sig_test, sigclu
                         x_all[i_epoch, i_mask, i_cell, min_across_cells * (i_x):min_across_cells * (i_x + 1)] = i_x
 
         # Now we have all our data with equal number of samples for each label and each cell, we can run the decoder
-        avgs, sem_traintestsplit = Maths.decode_across_epochs(x_all, y_all, decoder)
+        scores = Maths.decode_across_epochs(x_all, y_all, decoder)
 
-        accs_perms[:, :, :, i_cellselection] = np.mean(avgs, axis=3)
+        accs_perms[:, :, :, i_cellselection] = scores
 
         if i_area == 0:
-            print(f'Progress: {i_cellselection+1}/{numiters}')
+            print(f'Progress: {i_cellselection+1}/{D.dec_numiters}')
 
     accs = np.mean(accs_perms, axis=3)
     accs_all[i_area, 0] = accs
 
     std = np.nanstd(accs_perms, axis=3)
-    sem_cellselection = std / np.sqrt(numiters)
+    sem = std / np.sqrt(D.dec_numiters)
 
     # Add the SEM for sampling different subsets of cells to the SEM from different train/test splits of the data
-    sems_all[i_area, 0] = sem_traintestsplit + sem_cellselection
+    sems_all[i_area, 0] = sem
 
-    if run_sig_test:
-
-        if D.dec_numiters_traintestsplit < 4:
-            raise Exception('Not enough permutations for states (D.dec_numiters_traintestsplit)')
-
-        # Do sig test between different traintestsplit runs of the decoder (?)
-        sigdata = np.swapaxes(avgs, -1, -2)
-        sigclusters[i_area, 0] = Maths.permtest(sigdata, multiproc=False)
+    # if run_sig_test:
+    #
+    #     if D.dec_numiters_traintestsplit < 4:
+    #         raise Exception('Not enough permutations for states (D.dec_numiters_traintestsplit)')
+    #
+    #     # Do sig test between different traintestsplit runs of the decoder (?)
+    #     sigdata = np.swapaxes(avgs, -1, -2)
+    #     sigclusters[i_area, 0] = Maths.permtest(sigdata, multiproc=False)
 
 
 class Run:

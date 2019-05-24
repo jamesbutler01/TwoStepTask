@@ -258,8 +258,7 @@ def normalisedata(arr):
 def decode_across_epochs(x, y, decoder):
     numconds = y.shape[1]
 
-    accuracies = np.empty((numconds, D.numtrialepochs, D.num_timepoints, D.dec_numiters_traintestsplit))
-    sems = np.empty((numconds, D.numtrialepochs, D.num_timepoints))
+    accuracies = np.empty((numconds, D.numtrialepochs, D.num_timepoints))
 
     for epoch in range(D.numtrialepochs):
         for cond in range(numconds):
@@ -267,9 +266,9 @@ def decode_across_epochs(x, y, decoder):
                 y_arr = y[epoch, cond, :, :, ti]  # y by trials
                 x_arr = x[epoch, cond, :, :]  # x by trials
 
-                accuracies[cond, epoch, ti], sems[cond, epoch, ti] = rundecoder(x_arr, y_arr, decoder)
+                accuracies[cond, epoch, ti] = rundecoder(x_arr, y_arr, decoder)
 
-    return accuracies, sems
+    return accuracies
 
 
 def rundecoder(x, y, decoder):
@@ -278,32 +277,27 @@ def rundecoder(x, y, decoder):
         x = x[:, :np.min(np.where(np.isnan(x))[1])]
         y = y[:, :np.min(np.where(np.isnan(y))[1])]
 
-    # Make buffer array to hold the values once they are generated
-    score = np.empty(D.dec_numiters_traintestsplit)
+    # Randomly split into train and test
+    x_train, x_test, y_train, y_test = splitdata(x, y)
 
-    for i in range(D.dec_numiters_traintestsplit):
+    # Check test set has even number of the different categories
+    if np.sum(np.diff([np.sum(x_test[:, 0]==x_v) for x_v in np.unique(x_test[:, 0])])) != 0 or len(np.unique(x_test[:, 0])) == 1:
+        raise Exception('Uneven number of samples in test group')
 
-        # Randomly split into train and test
-        x_train, x_test, y_train, y_test = splitdata(x, y)
+    # Do decoding
+    if decoder == 'Logistic Regression':
+        decode_inst = LogisticRegression()
+    elif decoder == 'LDA':
+        decode_inst = LinearDiscriminantAnalysis()
+    elif decoder == 'SVM':
+        decode_inst = svm.SVC()
 
-        # Check test set has even number of the different categories
-        if np.sum(np.diff([np.sum(x_test[:, 0]==x_v) for x_v in np.unique(x_test[:, 0])])) != 0 or len(np.unique(x_test[:, 0])) == 1:
-            raise Exception('Uneven number of samples in test group')
+    decode_inst.fit(y_train, x_train[:, 0])
 
-        # Do decoding
-        if decoder == 'Logistic Regression':
-            decode_inst = LogisticRegression()
-        elif decoder == 'LDA':
-            decode_inst = LinearDiscriminantAnalysis()
-        elif decoder == 'SVM':
-            decode_inst = svm.SVC()
+    # Log score of model
+    score = decode_inst.score(y_test, x_test[:, 0])
 
-        decode_inst.fit(y_train, x_train[:, 0])
-
-        # Log score of model
-        score[i] = decode_inst.score(y_test, x_test[:, 0])
-
-    return score, sem(score)
+    return score
 
 
 def splitdata(x, y):

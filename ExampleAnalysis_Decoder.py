@@ -1,5 +1,4 @@
 import Details as D
-import Maths
 
 def createmasks(trialdata):
 
