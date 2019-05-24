@@ -16,15 +16,6 @@ class MyManager(multiprocessing.managers.BaseManager):
 
 MyManager.register('np_zeros', np.zeros, multiprocessing.managers.ArrayProxy)
 
-if False:
-    import Dec_c2_dir_AA_AB as dec
-    unique_func = dec.createmasks
-    i_area = 0
-    import ImportData
-    i_area = 1
-    data = ImportData.EntireArea(D.areas[i_area])
-    dists_all = np.empty((D.numareas, data.n))
-
 
 def removeinvalidentries(arr_in, check_arr):
     return arr_in[check_arr != -1]
@@ -33,14 +24,16 @@ def removeinvalidentries(arr_in, check_arr):
 def analysearea(unique_func, num_conds, accs_all, sems_all, run_sig_test, sigclusters, decoder, minsamples, dists_all, i_area):
 
     data = ImportData.EntireArea(D.areas[i_area])
-    counts = np.empty((num_conds, data.n), dtype=int)
     validcells = np.ones(data.n, bool)
-    min_trials = 999
+    min_across_cells = 999
+
+    # First we need to work out what the minimum number of samples across all cells
     for cell in range(data.n):
         td = data.behavdata[cell]
 
         x_data, masks = unique_func(td)
 
+        # Remove any -1 entries in the x values
         masks = [removeinvalidentries(mask, x_data) for mask in masks]
         x_data = removeinvalidentries(x_data, x_data)
 
@@ -48,66 +41,82 @@ def analysearea(unique_func, num_conds, accs_all, sems_all, run_sig_test, sigclu
         numitems = [len(label) for label in labels]
 
         cell_min = 999
-        for i, (mask, label) in enumerate(zip(masks, labels)):
+
+        # Iterate through each condition
+        for i_mask, (mask, label) in enumerate(zip(masks, labels)):
+
+            # Get fewest number of trials for the different labels
             this_min = np.min([sum(x_data[mask] == lab) for lab in label])
 
+            # If lower than current lowest store it
             if this_min < cell_min:
                 cell_min = this_min
-
-            counts[i, cell] = this_min
-
+        
+        # Store data to plot
         dists_all[i_area, cell] = cell_min
-
-        if cell_min < min_trials:
-            min_trials = cell_min
-
+        
+        # If this cell lower n than all previous cells then update min_across_cells
+        if cell_min < min_across_cells:
+            min_across_cells = cell_min
+        
+        # If not above specified minimum then disable this cell for the future analysis
         if cell_min < minsamples:
             validcells[cell] = False
-
-    print(f'Area: {D.areas[i_area]} has {min_trials} minimum samples, {int(np.mean(validcells)*100)}% cells included ({sum(validcells)})')
-
-    y_all = np.empty((D.numtrialepochs, num_conds, sum(validcells), min_trials * np.max(numitems), D.num_timepoints))
-    x_all = np.empty((D.numtrialepochs, num_conds, sum(validcells), min_trials * np.max(numitems)))
-
+    
+    # Now we know the maximum of trials to use with the decoder
+    print(f'Area: {D.areas[i_area]} has {min_across_cells} minimum samples, {int(np.mean(validcells)*100)}% cells included ({sum(validcells)})')
+  
+    # If we have included all cells then we don't need to iterate over different sub populations
+    numiters = D.dec_numiters_cellselection
+    if False not in validcells:
+        numiters = 1
+    
+    # Make holding arrays for analysis
+    accs_perms = np.empty((num_conds, D.numtrialepochs, D.num_timepoints, numiters))
+    y_all = np.empty((D.numtrialepochs, num_conds, sum(validcells), min_across_cells * np.max(numitems), D.num_timepoints))
+    x_all = np.empty((D.numtrialepochs, num_conds, sum(validcells), min_across_cells * np.max(numitems)))
     y_all.fill(np.nan)
     x_all.fill(np.nan)
 
-    # If we have included all cells then we don't need to iterate over different sub populations
-    numiters = D.dec_numiters_cellselection
-    if int(np.mean(validcells) * 100) == 100:
-        numiters = 1
-
-    accs_perms = np.empty((num_conds, D.numtrialepochs, D.num_timepoints, numiters))
-
     # Do multiple loops with different subsets of cells
     for i_cellselection in range(numiters):
-
+        
+        # Loop to collect all the data from the different cells that had enough trials
         for i_cell, cell in enumerate(np.where(validcells == 1)[0]):
 
             td = data.behavdata[cell]
 
             x_data, masks = unique_func(td)
-
+            
+            # For each epoch
             for i_epoch, epoch in enumerate(D.epochs):
 
                 y = data.generatenormalisedepoch(cell, epoch)
 
-                for i, mask in enumerate(masks):
+                # For each condition get the data
+                for i_mask, mask in enumerate(masks):
                     y_masked = y[mask]
                     x_masked = x_data[mask]
 
+                    # Remove any potential -1's in the x data
                     y_masked = removeinvalidentries(y_masked, x_masked)
                     x_masked = removeinvalidentries(x_masked, x_masked)
 
+                    # For each label
                     for i_x, x_val in enumerate(np.unique(x_masked)):
+
+                        # Get the y data just for this condition and this x-label
                         y_for_xval = y_masked[x_masked == x_val]
 
-                        ind_inc_trials = np.random.choice(len(y_for_xval), min_trials, replace=False)
+                        # Choose random subset of y data
+                        ind_inc_trials = np.random.choice(len(y_for_xval), min_across_cells, replace=False)
 
-                        y_all[i_epoch, i, i_cell, min_trials * (i_x):min_trials * (i_x + 1), :] = y_for_xval[
+                        # Store x and y data in holding arrays
+                        y_all[i_epoch, i_mask, i_cell, min_across_cells * (i_x):min_across_cells * (i_x + 1), :] = y_for_xval[
                             ind_inc_trials]
-                        x_all[i_epoch, i, i_cell, min_trials * (i_x):min_trials * (i_x + 1)] = i_x
+                        x_all[i_epoch, i_mask, i_cell, min_across_cells * (i_x):min_across_cells * (i_x + 1)] = i_x
 
+        # Now we have all our data with equal number of samples for each label and each cell, we can run the decoder
         avgs, sem_traintestsplit = Maths.decode_across_epochs(x_all, y_all, decoder)
 
         accs_perms[:, :, :, i_cellselection] = np.mean(avgs, axis=3)

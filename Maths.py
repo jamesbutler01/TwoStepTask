@@ -262,12 +262,12 @@ def decode_across_epochs(x, y, decoder):
     sems = np.empty((numconds, D.numtrialepochs, D.num_timepoints))
 
     for epoch in range(D.numtrialepochs):
-        for choice in range(numconds):
+        for cond in range(numconds):
             for ti in range(D.num_timepoints):
-                y_aar = y[epoch, choice, :, :, ti]  # y by trials
-                x_aar = x[epoch, choice, :, :]  # y by trials
+                y_arr = y[epoch, cond, :, :, ti]  # y by trials
+                x_arr = x[epoch, cond, :, :]  # x by trials
 
-                accuracies[choice, epoch, ti], sems[choice, epoch, ti] = rundecoder(x_aar, y_aar, decoder)
+                accuracies[cond, epoch, ti], sems[cond, epoch, ti] = rundecoder(x_arr, y_arr, decoder)
 
     return accuracies, sems
 
