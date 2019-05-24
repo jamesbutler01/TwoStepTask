@@ -59,7 +59,7 @@ def converttimetosmoothedtrace(time):
     return int(time)
 
 # Stats
-numperms = 1000
+numperms = 20
 
 # Rsa
 rsa_start = converttimetosmoothedtrace(200)
@@ -73,8 +73,8 @@ names_epochs = ('Fixation', 'Choice 1 on', '\nChoice 1 made', '\nTransition Reve
 numtrialepochs = len(epochs)
 
 # Permutation tests
-sigthreshold = numperms * 0.005  # .05% p-value
-sigthreshold = numperms * 0.025  # 2.5% p-value
+sigthreshold_onetailed = numperms * 0.05  # .05% p-value
+sigthreshold_twotailed = numperms * 0.025  # .05% p-value
 
 # Decoder
 dec_numiters = 10

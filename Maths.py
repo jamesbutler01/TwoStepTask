@@ -139,7 +139,7 @@ def permtest(arr, multiproc=True):
         # Observed
         sigcluster, clusterlength = findsignificancecluster(epoch)
 
-        if len(np.where(dist > clusterlength)[0]) > D.sigthreshold:
+        if len(np.where(dist > clusterlength)[0]) > D.sigthreshold_onetailed:
             sigcluster.fill(0)  # Erase cluster if it wasn't significant
 
         out[i_epoch] = sigcluster

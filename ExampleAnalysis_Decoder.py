@@ -28,7 +28,7 @@ if __name__ == "__main__":
     num_rows = 1
     decoder = D.decoders[1]
     minsamples = 8
-    ManagerDecoder.Run(createmasks, False, num_conds, num_rows, maintitle, ytitles, savefolder, trace_names, decoder, minsamples)
+    ManagerDecoder.Run(createmasks, True, num_conds, num_rows, maintitle, ytitles, savefolder, trace_names, decoder, minsamples)
 
 
 
