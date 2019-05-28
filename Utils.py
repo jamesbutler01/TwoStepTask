@@ -9,6 +9,11 @@ def getarrs(num_cond, num_rows):
     all_sem = np.zeros((D.numareas, num_rows, num_cond, D.numtrialepochs, D.num_timepoints))
     sigclusters = np.zeros((D.numareas, num_rows, D.numtrialepochs, D.num_timepoints))
 
+    # Fill with nans
+    all_avgs.fill(np.nan)
+    all_sem.fill(np.nan)
+    sigclusters.fill(np.nan)
+
     return all_avgs, all_sem, sigclusters
 
 

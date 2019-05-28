@@ -72,5 +72,5 @@ class Run:
 
         print(timer.elapsedtime())
 
-        plotfunc(all_avgs, all_sem, sigclusters, trace_names, savefolder, ytitles, maintitle)
+        plotfunc(all_avgs, all_sem, sigclusters, trace_names, savefolder, ytitles, maintitle, True)
 

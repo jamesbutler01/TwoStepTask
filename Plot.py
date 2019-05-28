@@ -12,7 +12,7 @@ width_regplot = 15
 height_regplot = 2.75
 
 
-def _makeandplotavgs(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labels, show_leg):
+def _makeandplotavgs(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labels, show_leg, scale_sig):
     avgs = np.empty((avg_in.shape[0], numpoints))
     avgs.fill(np.nan)
     sems = np.copy(avgs)
@@ -31,40 +31,10 @@ def _makeandplotavgs(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labels, sho
             sems[i_trans, start:fin] = sems_in[i_trans, i_epoch]
 
     if showsig:
-        sigmarker *= np.nanmax(avgs)
-        sigmarker[sigmarker==0] = np.nan
-        sigmarker += 0.05
-        if show_leg:
-            ax.plot(sigmarker, color='black', lw=2, label='Significant')
-        else:
-            ax.plot(sigmarker, color='black', lw=2)
-
-    for i_trace, (avg_in, sem, label) in enumerate(zip(avgs, sems, leg_labels)):
-        _plotpanel(ax, avg_in, sem, i_trace, ylab, label, show_leg)
-
-
-def _makeandplotcounts(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labels, show_leg):
-    avgs = np.empty((avg_in.shape[0], numpoints))
-    avgs.fill(np.nan)
-    sems = np.copy(avgs)
-    sigmarker = np.empty(numpoints)
-    sigmarker.fill(np.nan)
-
-    for i_epoch in range(D.numtrialepochs):
-        start = i_epoch * binlength
-        fin = i_epoch * binlength + D.num_timepoints
-
-        if showsig:
-            sigmarker[start:fin] = sig_in[i_epoch]
-
-        for i_trans in range(avg_in.shape[0]):
-            avgs[i_trans, start:fin] = avg_in[i_trans, i_epoch]
-            sems[i_trans, start:fin] = sems_in[i_trans, i_epoch]
-
-    if showsig:
-        sigmarker *= np.nanmax(avgs)
-        sigmarker[sigmarker==0] = np.nan
-        sigmarker += 0.05
+        if scale_sig:
+            sigmarker *= np.nanmax(avgs)
+            sigmarker[sigmarker==0] = np.nan
+            sigmarker += 0.05
         if show_leg:
             ax.plot(sigmarker, color='black', lw=2, label='Significant')
         else:
@@ -100,7 +70,7 @@ def _finalplotadjustments(f, title):
     plt.tick_params(axis='both', which='major', labelsize=13)
 
 
-def GeneralPlot(avgs, sems, sigclusters, trace_names, savefolder, ytitles, maintitle):
+def GeneralPlot(avgs, sems, sigclusters, trace_names, savefolder, ytitles, maintitle, scale_sig):
     numrows = avgs.shape[1]
     showlegends = [True if i==0 else False for i in range(numrows)]
     
@@ -110,17 +80,17 @@ def GeneralPlot(avgs, sems, sigclusters, trace_names, savefolder, ytitles, maint
 
         if numrows > 1:
             for i, (label, leg_bool) in enumerate(zip(ytitles, showlegends)):
-                _makeandplotavgs(avgs_area[i], sems_area[i], sig_area[i], axes[i], ylab=label, showsig=True, leg_labels=trace_names, show_leg=leg_bool)
+                _makeandplotavgs(avgs_area[i], sems_area[i], sig_area[i], axes[i], ylab=label, showsig=True, leg_labels=trace_names, show_leg=leg_bool, scale_sig=scale_sig)
 
         else:
-                _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=ytitles, showsig=True, leg_labels=trace_names, show_leg=showlegends)
+                _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=ytitles, showsig=True, leg_labels=trace_names, show_leg=showlegends, scale_sig=scale_sig)
 
         title = maintitle+ f' ({area})'
         _finalplotadjustments(f, title)
         U.savefig(savefolder, area)
 
 
-def GeneralAllAreas(avgs, sems, sigclusters, trace_names, savefolder, ytitles, maintitle):
+def GeneralAllAreas(avgs, sems, sigclusters, trace_names, savefolder, ytitles, maintitle, scale_sig):
     numrows = avgs.shape[1]
     if numrows > 1:
         raise Exception('Can only plot one row per area')
@@ -131,9 +101,9 @@ def GeneralAllAreas(avgs, sems, sigclusters, trace_names, savefolder, ytitles, m
 
     for i_area, (area, avgs_area, sems_area, sig_area, axes) in enumerate(zip(D.areas, avgs, sems, sigclusters, axes_all)):
         if i_area == 0:
-            _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=D.areanames[i_area], showsig=True, leg_labels=trace_names, show_leg=showlegends)
+            _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=D.areanames[i_area], showsig=True, leg_labels=trace_names, show_leg=showlegends, scale_sig=scale_sig)
         else:
-            _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=D.areanames[i_area], showsig=True, leg_labels=trace_names, show_leg=False)
+            _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=D.areanames[i_area], showsig=True, leg_labels=trace_names, show_leg=False, scale_sig=scale_sig)
 
     _finalplotadjustments(f, maintitle)
     U.savefig(savefolder, 'all')
@@ -142,9 +112,9 @@ def GeneralAllAreas(avgs, sems, sigclusters, trace_names, savefolder, ytitles, m
 
     for i_area, (area, avgs_area, sems_area, sig_area, axes) in enumerate(zip(D.areas, avgs, sems, sigclusters, axes_all)):
         if i_area == 0:
-            _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=D.areanames[i_area], showsig=True, leg_labels=trace_names, show_leg=showlegends)
+            _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=D.areanames[i_area], showsig=True, leg_labels=trace_names, show_leg=showlegends, scale_sig=scale_sig)
         else:
-            _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=D.areanames[i_area], showsig=True, leg_labels=trace_names, show_leg=False)
+            _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=D.areanames[i_area], showsig=True, leg_labels=trace_names, show_leg=False, scale_sig=scale_sig)
 
     _finalplotadjustments(f, maintitle)
 

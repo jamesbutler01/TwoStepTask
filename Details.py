@@ -58,9 +58,6 @@ def converttimetosmoothedtrace(time):
     time /= smooth_step
     return int(time)
 
-# Stats
-numperms = 20
-
 # Rsa
 rsa_start = converttimetosmoothedtrace(200)
 rsa_stop = converttimetosmoothedtrace(600)
@@ -73,11 +70,12 @@ names_epochs = ('Fixation', 'Choice 1 on', '\nChoice 1 made', '\nTransition Reve
 numtrialepochs = len(epochs)
 
 # Permutation tests
-sigthreshold_onetailed = numperms * 0.05  # .05% p-value
-sigthreshold_twotailed = numperms * 0.025  # .05% p-value
+numperms = 1000
+sigthreshold_onetailed = int(numperms * 0.05)  # .05% p-value
+sigthreshold_twotailed = int(numperms * 0.025)  # .05% p-value
 
 # Decoder
-dec_numiters = 10
+dec_numiters = 50
 dec_test_size = 0.2
 decoders = ('Logistic Regression', 'SVM', 'LDA')
 

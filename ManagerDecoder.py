@@ -122,6 +122,7 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, run_sig_test, sigclu
             accs_perms[:, :, :, i_cellselection] = scores
 
             if i_area == 0: print(f'Progress: {i_cellselection+1}/{D.dec_numiters}')
+            print(f'{i_area} Progress: {i_cellselection+1}/{D.dec_numiters}')
 
         return accs_perms
 
@@ -134,20 +135,23 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, run_sig_test, sigclu
 
     sems_out[i_area, 0] = sem
 
-    if i_area == 0: print('Finished decoding')
+    print(f'{i_area} Finished decoding')
 
     if run_sig_test:
 
         num_iters = D.numperms//D.dec_numiters
-        accs_permtest = np.empty((num_conds, D.numtrialepochs, D.num_timepoints, D.numperms))
+        accs_permtest = np.empty((num_conds, D.numtrialepochs, D.num_timepoints, D.numperms - (D.numperms % D.dec_numiters)))
 
         for i in range(num_iters):
-            accs_permtest[:, :, :,i*D.dec_numiters: (i+1)*D.dec_numiters] = run_decoder(False)
+            accs_permtest[:, :, :,i*D.dec_numiters: (i+1)*D.dec_numiters] = run_decoder(True)
+            print(f'{i_area} Permutation progress: {i+1}/{num_iters}')
 
         # Get CI
         accs_sorted = np.sort(accs_permtest, axis=3)  # Sort permutations
         accs_ci = accs_sorted[:, :, :, -D.sigthreshold_onetailed]  # Take the 95th highest permutation
-        sigclusters[i_area, 0] = accs_ci
+        accs_nocond = np.max(accs_ci, axis=0)  # Take the highest score from the different conditions
+        sigclusters[i_area, 0] = accs_nocond
+
 
 class Run:
 
@@ -176,9 +180,9 @@ class Run:
 
         print(timer.elapsedtime())
 
-        Plot.GeneralPlot(accs_all, sems_all, sigclusters, trace_names, savefolder, ytitles, maintitle)
+        Plot.GeneralPlot(accs_all, sems_all, sigclusters, trace_names, savefolder, ytitles, maintitle, scale_sig=False)
 
-        Plot.GeneralAllAreas(accs_all, sems_all, sigclusters, trace_names, savefolder, ytitles, maintitle)
+        Plot.GeneralAllAreas(accs_all, sems_all, sigclusters, trace_names, savefolder, ytitles, maintitle, scale_sig=False)
 
         Plot.PlotDist(dists_all, savefolder)
         return accs_all, sems_all, sigclusters, trace_names, savefolder, ytitles, maintitle
