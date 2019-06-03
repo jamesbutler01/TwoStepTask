@@ -300,6 +300,8 @@ def rundecoder(x, y, decoder):
     return score
 
 
+
+
 def splitdata(x, y):
     x_train, x_test, y_train, y_test = train_test_split(x.T, y.T, test_size=D.dec_test_size, stratify=x.T)
 

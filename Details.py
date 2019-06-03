@@ -75,7 +75,7 @@ sigthreshold_onetailed = int(numperms * 0.05)  # .05% p-value
 sigthreshold_twotailed = int(numperms * 0.025)  # .05% p-value
 
 # Decoder
-dec_numiters = 50
+dec_numiters = 10
 dec_test_size = 0.2
 decoders = ('Logistic Regression', 'SVM', 'LDA')
 

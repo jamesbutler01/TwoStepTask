@@ -121,8 +121,7 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, run_sig_test, sigclu
 
             accs_perms[:, :, :, i_cellselection] = scores
 
-            if i_area == 0: print(f'Progress: {i_cellselection+1}/{D.dec_numiters}')
-            print(f'{i_area} Progress: {i_cellselection+1}/{D.dec_numiters}')
+            print(f'{D.areas[i_area]} Progress: {i_cellselection+1}/{D.dec_numiters}')
 
         return accs_perms
 
@@ -135,7 +134,7 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, run_sig_test, sigclu
 
     sems_out[i_area, 0] = sem
 
-    print(f'{i_area} Finished decoding')
+    print(f'{D.areas[i_area]} Finished decoding')
 
     if run_sig_test:
 
@@ -144,13 +143,16 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, run_sig_test, sigclu
 
         for i in range(num_iters):
             accs_permtest[:, :, :,i*D.dec_numiters: (i+1)*D.dec_numiters] = run_decoder(True)
-            print(f'{i_area} Permutation progress: {i+1}/{num_iters}')
+            print(f'{D.areas[i_area]} Permutation progress: {i+1}/{num_iters}')
 
         # Get CI
         accs_sorted = np.sort(accs_permtest, axis=3)  # Sort permutations
-        accs_ci = accs_sorted[:, :, :, -D.sigthreshold_onetailed]  # Take the 95th highest permutation
-        accs_nocond = np.max(accs_ci, axis=0)  # Take the highest score from the different conditions
-        sigclusters[i_area, 0] = accs_nocond
+        sigthreshold = D.sigthreshold_onetailed
+        if sigthreshold == 0: sigthreshold = 1  # -0 indexing doesn't work
+        accs_ci = accs_sorted[:, :, :, -sigthreshold]  # Take the 95th highest permutation
+        sigclusters[i_area, 0] = accs_ci
+
+        # TODO: Find how long runs of significance are as in regression analysis
 
 
 class Run:
@@ -165,9 +167,9 @@ class Run:
         m.start()
 
         accs_all, sems_all, sigclusters = Utils.getarrs(num_conds, num_rows)
+        sigclusters = m.np_zeros(accs_all.shape)  # Same shape as actual values for decoder analysis
         accs_all = m.np_zeros(accs_all.shape)
         sems_all = m.np_zeros(sems_all.shape)
-        sigclusters = m.np_zeros(sigclusters.shape)
         dists_all = m.np_zeros((D.numareas, 300))
 
         pool = Pool(5)
@@ -180,11 +182,12 @@ class Run:
 
         print(timer.elapsedtime())
 
-        Plot.GeneralPlot(accs_all, sems_all, sigclusters, trace_names, savefolder, ytitles, maintitle, scale_sig=False)
+        Plot.GeneralPlot(accs_all, sems_all, sigclusters, trace_names, savefolder, ytitles, maintitle, scale_sig=False, show_sig=run_sig_test)
 
-        Plot.GeneralAllAreas(accs_all, sems_all, sigclusters, trace_names, savefolder, ytitles, maintitle, scale_sig=False)
+        Plot.GeneralAllAreas(accs_all, sems_all, sigclusters, trace_names, savefolder, ytitles, maintitle, scale_sig=False, show_sig=run_sig_test)
 
         Plot.PlotDist(dists_all, savefolder)
+
         return accs_all, sems_all, sigclusters, trace_names, savefolder, ytitles, maintitle
 
 
