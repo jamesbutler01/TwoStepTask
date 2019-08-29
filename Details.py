@@ -27,7 +27,7 @@ ind_sidechosen1 = 4
 ind_transition = 5
 ind_picchosen2 = 6
 ind_sidechosen2 = 7
-ind_rewardgiven = 8
+ind_rewardgiven = 9
 
 # Strobe codes
 sc_startoftrial = 9
@@ -65,19 +65,24 @@ rsa_norm_method = 'normalise'
 
 # Trial epochs
 num_timepoints = smooth_outputlength
-epochs = (sc_madefixation, sc_choice1on, sc_choice1made, sc_transition, sc_choice2on, sc_choice2made, sc_secondaryreinforceron)
-names_epochs = ('Fixation', 'Choice 1 on', '\nChoice 1 made', '\nTransition Revealed', 'Choice 2 on', '\nChoice 2 made', 'Secondary Reinforcer')
+epochs = (sc_madefixation, sc_choice1on, sc_transition, sc_choice2on, sc_choice2made, sc_secondaryreinforceron)
+names_epochs = ('Fixation', 'Choice 1 on', '\nTransition Revealed', 'Choice 2 on', '\nChoice 2 made', 'Secondary Reinforcer')
 numtrialepochs = len(epochs)
 
 # Permutation tests
-numperms = 1000
+numperms = 30
 sigthreshold_onetailed = int(numperms * 0.05)  # .05% p-value
 sigthreshold_twotailed = int(numperms * 0.025)  # .05% p-value
 
 # Decoder
-dec_numiters = 10
+dec_numiters = 20
 dec_test_size = 0.2
+dec_minsamples = 5
+dec_upsample = False
+dec_do_perms = True
+dec_leaveoneout = False
 decoders = ('Logistic Regression', 'SVM', 'LDA')
+decoder = decoders[1]
 
 def savefig_makefolder(savedir, name):
     path = f'{D.dir_savefig}{savedir}'

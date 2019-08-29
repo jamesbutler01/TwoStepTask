@@ -1,3 +1,4 @@
+import scipy
 import numpy as np
 import scipy.special as special  # F-distribution lookup table
 from numba import jit
@@ -136,11 +137,25 @@ def permtest(arr, multiproc=True):
             for i in range(D.numperms):
                 doperms(epoch_buff, dist, i)
 
-        # Observed
-        sigcluster, clusterlength = findsignificancecluster(epoch)
+        # Now check observed data
+        sigcluster = np.zeros(epoch.shape[-1])
 
-        if len(np.where(dist > clusterlength)[0]) > D.sigthreshold_onetailed:
-            sigcluster.fill(0)  # Erase cluster if it wasn't significant
+        for i in range(epoch.shape[-1]):
+
+            onecluster, clusterlength = findsignificancecluster(epoch)
+
+            if sum(dist > clusterlength) > D.sigthreshold_onetailed or clusterlength < 1:
+                # If no significance then stop looking
+                break
+            else:
+                # Significant, so add it to marker
+                sigcluster += onecluster
+                # Erase points that gave significance (set different conds to same value so they are not sig. anymore)
+                epoch = np.swapaxes(epoch, 0, 2)
+                epoch[sigcluster == 1] = 1
+                epoch = np.swapaxes(epoch, 0, 2)
+        else:
+            print('Error, surely shouldnt get this far (i.e. 100 separate clusters)')
 
         out[i_epoch] = sigcluster
 
@@ -158,7 +173,6 @@ def findsignificancecluster(arr):
     for t_i, t in enumerate(arr):
         # Remove any cells that had nan's
         t = t[~np.isnan(t).any(axis=1)]
-
         pvals[t_i] = anova(t.T)
     if len(pvals[~np.isnan(pvals)]) != len(pvals):
         raise Exception('Invalid data - nans present')
@@ -255,54 +269,228 @@ def normalisedata(arr):
     return arr
 
 
-def decode_across_epochs(x, y, decoder):
+def decode_across_epochs(x, y, peak_epoch=None, peak_cond=None, train_across_conds=False, permtest=False):
+
+    if permtest:
+        n_epochs = 1
+        n_timepoints = 1
+    else:
+        n_epochs = D.numtrialepochs
+        n_timepoints = D.num_timepoints
+
     numconds = y.shape[1]
+    accuracies = np.empty((numconds, n_epochs, n_timepoints))
 
-    accuracies = np.empty((numconds, D.numtrialepochs, D.num_timepoints))
+    # Collapse across conditions to then test within conditions
+    if train_across_conds:
 
-    for epoch in range(D.numtrialepochs):
+        for epoch in range(n_epochs):
+
+            accuracies[:, epoch] = decode_epoch_acrossconds(x, y, epoch, n_timepoints)
+
+        return accuracies
+
+
+    # If they specified a peak_epoch, then train on this epoch and test on all others
+    if peak_epoch is not None:
+
+        accuracies[peak_cond, peak_epoch], dec_to_test = decode_epoch_traintestsplit(x, y, peak_epoch, peak_cond, n_timepoints)
+
+
+    for epoch in range(n_epochs):
+
         for cond in range(numconds):
-            for ti in range(D.num_timepoints):
-                y_arr = y[epoch, cond, :, :, ti]  # y by trials
-                x_arr = x[epoch, cond, :, :]  # x by trials
 
-                accuracies[cond, epoch, ti] = rundecoder(x_arr, y_arr, decoder)
+            if epoch==peak_epoch and cond == peak_cond and not train_across_conds:
+
+                continue
+
+            if peak_epoch is None:
+
+                # Point to point decoding
+
+                if D.dec_leaveoneout:
+
+                    accuracies[cond, epoch], _ = decode_epoch_leaveoneout(x, y, epoch, cond, n_timepoints)
+
+                else:
+
+                    accuracies[cond, epoch], _ = decode_epoch_traintestsplit(x, y, epoch, cond, n_timepoints)
+
+            else:
+
+                accuracies[cond, epoch], _ = decode_epoch_traintestsplit(x, y, epoch, cond, n_timepoints, dec_in=dec_to_test)
 
     return accuracies
 
 
-def rundecoder(x, y, decoder):
-    # Clip off trailing nans from holding array input
-    if np.isnan(x).any():
-        x = x[:, :np.min(np.where(np.isnan(x))[1])]
-        y = y[:, :np.min(np.where(np.isnan(y))[1])]
+# Decode all timepoints of a single epoch
+# If no decoder is provided, then it splits data into train test split and creates one
+# Returns accuracies for each time point, and the best decoder
+def decode_epoch_traintestsplit(x, y, epoch, cond, n_timepoints, dec_in=None):
 
-    # Randomly split into train and test
-    x_train, x_test, y_train, y_test = splitdata(x, y)
+    accs = np.zeros(n_timepoints)
 
-    # Check test set has even number of the different categories
-    if np.sum(np.diff([np.sum(x_test[:, 0]==x_v) for x_v in np.unique(x_test[:, 0])])) != 0 or len(np.unique(x_test[:, 0])) == 1:
-        raise Exception('Uneven number of samples in test group')
+    for ti in range(n_timepoints):
+        y_arr = y[epoch, cond, :, :, ti]  # y by trials
+        x_arr = x[epoch, cond, :, :]  # x by trials
 
-    # Do decoding
-    if decoder == 'Logistic Regression':
+        # Filter out NaNs across both dimensions
+        if np.isnan(x_arr).any():
+            # First remove trials without entries (trailing nans)
+            x_arr = x_arr[:, ~np.isnan(x_arr).all(axis=0)]
+            y_arr = y_arr[:, ~np.isnan(y_arr).all(axis=0)]
+
+            # Now remove neurons without any entries
+            x_arr = x_arr[~np.isnan(x_arr).all(axis=1)]
+            y_arr = y_arr[~np.isnan(y_arr).all(axis=1)]
+
+        if dec_in == None:
+
+            # If no decoder provided we need to train one
+            x_train, x_test, y_train, y_test = splitdata(x_arr, y_arr)
+
+            dec = create_and_train_decoder(x_train, y_train)
+
+        else:
+
+            # Decoder provided so test it on all samples
+            x_test, y_test, dec = x_arr.T, y_arr.T, dec_in
+
+        score = test_decoder(dec, x_test, y_test)
+
+        if score > np.max(accs) or ti == 0:
+            best_dec = dec
+
+        accs[ti] = score
+
+    return accs, best_dec
+
+
+# Train across all conds then test on the individual conds
+def decode_epoch_acrossconds(x, y, epoch, n_timepoints):
+
+    n_conds = x.shape[1]
+    accs = np.zeros((n_conds, n_timepoints))
+
+    for ti in range(n_timepoints):
+
+        # First we split data into train and test across conditions
+        for i_cond in range(n_conds):
+
+            y_arr = y[epoch, i_cond, :, :, ti]  # y by trials
+            x_arr = x[epoch, i_cond, :, :]  # x by trials
+
+            # Filter out NaNs across both dimensions
+            if np.isnan(x_arr).any():
+                x_arr = filternans2d(x_arr)
+                y_arr = filternans2d(y_arr)
+
+            x_train, x_test, y_train, y_test = splitdata(x_arr, y_arr)
+
+            if i_cond == 0:
+                x_train_all, y_train_all = np.copy(x_train), np.copy(y_train)
+                x_test_all = np.empty((n_conds, x_test.shape[0], x_test.shape[1]))
+                y_test_all = np.empty((n_conds, y_test.shape[0], y_test.shape[1]))
+            else:
+                try:
+                    x_train_all = np.vstack((x_train_all, x_train))
+                    y_train_all = np.vstack((y_train_all, y_train))
+                except ValueError:
+                    print('You have different number of cells in the different conditions')
+
+            x_test_all[i_cond] = x_test
+            y_test_all[i_cond] = y_test
+
+        # Finally train decoder
+        dec = create_and_train_decoder(x_train_all, y_train_all)
+
+        # Now loop through conds and test on different left out data
+        for i_cond in range(n_conds):
+
+            score = test_decoder(dec, x_test_all[i_cond], y_test_all[i_cond])
+
+            accs[i_cond, ti] = score
+
+    return accs
+
+
+# Use leave one out method instead
+def decode_epoch_leaveoneout(x, y, epoch, cond, n_timepoints):
+
+    accs = np.zeros(n_timepoints)
+
+    for ti in range(n_timepoints):
+        y_arr = y[epoch, cond, :, :, ti]  # y by trials
+        x_arr = x[epoch, cond, :, :]  # x by trials
+
+        # Filter out NaNs across both dimensions
+        if np.isnan(x_arr).any():
+            # First remove trials without entries (trailing nans)
+            x_arr = x_arr[:, ~np.isnan(x_arr).all(axis=0)]
+            y_arr = y_arr[:, ~np.isnan(y_arr).all(axis=0)]
+
+            # Now remove neurons without any entries
+            x_arr = x_arr[~np.isnan(x_arr).all(axis=1)]
+            y_arr = y_arr[~np.isnan(y_arr).all(axis=1)]
+
+
+        n = x_arr.shape[1]
+        scores = []
+
+        for i in range(n):
+            m = np.ones(n, dtype=bool)
+            m[i] = False
+
+            # Now find other corresponding labels to exclude so there's an even number
+            n_per_labs = [sum(x_arr[0][m]==l) for l in np.unique(x_arr[0])]
+
+            # For all labels
+            for i_n, n_per_lab in enumerate(n_per_labs):
+
+                # If this label has too many trials
+                if n_per_lab != np.min(n_per_labs):
+                    # Pick a random one and add it to the mask
+                    l = np.unique(x_arr[0])[i_n]  # Find which label it is
+                    ls = np.where(x_arr[0]==l)[0]  # Find occurences of this label
+                    rand_l = ls[np.random.randint(len(ls))]  # Pick random occurrence
+                    m[rand_l] = False
+
+            dec = create_and_train_decoder(x_arr[:, m].T, y_arr[:, m].T)
+
+            score = test_decoder(dec, x_arr[:, ~m].T, y_arr[:, ~m].T)
+
+            scores.append(score)
+
+        if np.mean(scores) > np.max(accs):
+            best_dec = dec
+
+        accs[ti] = np.mean(scores)
+
+    return accs, best_dec
+
+
+def create_and_train_decoder(x, y):
+
+    if D.decoder == 'Logistic Regression':
         decode_inst = LogisticRegression()
-    elif decoder == 'LDA':
+    elif D.decoder == 'LDA':
         decode_inst = LinearDiscriminantAnalysis()
-    elif decoder == 'SVM':
+    elif D.decoder == 'SVM':
         decode_inst = svm.SVC()
 
-    decode_inst.fit(y_train, x_train[:, 0])
+    decode_inst.fit(y, x[:, 0])
 
-    # Log score of model
-    score = decode_inst.score(y_test, x_test[:, 0])
+    return decode_inst
 
+
+def test_decoder(dec, x, y):
+    score = dec.score(y, x[:, 0])
     return score
 
 
-
-
 def splitdata(x, y):
+
     x_train, x_test, y_train, y_test = train_test_split(x.T, y.T, test_size=D.dec_test_size, stratify=x.T)
 
     # Ensure correct test sample size such that even number of each class
@@ -313,16 +501,42 @@ def splitdata(x, y):
         if nudge > 1:
             raise Exception('while timeout')
 
+    # Check test set has even number of the different categories
+    if np.sum(np.diff([np.sum(x_test[:, 0]==x_v) for x_v in np.unique(x_test[:, 0])])) != 0 or len(np.unique(x_test[:, 0])) == 1:
+        raise Exception('Uneven number of samples in test group')
+
     return x_train, x_test, y_train, y_test
 
 
-def rsa(arr, second_arr, suffix, plotfunc, area):
-    rsa = np.empty((arr.shape[1], arr.shape[1]))
-    for i_state, state in enumerate(arr.T):
-        state_mask = ~np.isnan(state)
-        for j_state, state2 in enumerate(second_arr.T):
-            rsa[i_state, j_state] = corrcoef(state, state2)[0, 1]
+def nans(shape_of_arr):
+    out = np.zeros(shape_of_arr)
+    out.fill(np.nan)
+    return out
 
-    plotfunc(rsa, area, suffix)
 
-    return rsa.flatten()
+def ttest_1samp(x, exp_mean):
+    t, p = scipy.stats.ttest_1samp(x, exp_mean)
+    return p
+
+
+def filternans2d(arr):
+    arr = arr[:, ~np.isnan(arr).all(axis=0)]
+    arr = arr[~np.isnan(arr).all(axis=1)]
+    return arr
+
+
+def calc_sig_length_null_dist():
+
+    # See how often you get runs of significance in each epoch
+    dist = []
+    n = D.num_timepoints
+    for i in range(D.numperms):
+        bin = np.zeros(n)
+        ind_inc_trials = np.random.choice(n, int(n * 0.05), replace=False)
+        bin[ind_inc_trials] = 1
+        _, l = findlongestrun(bin)
+        dist.append(l)
+    dist_sorted = np.sort(np.array(dist))
+
+    return dist_sorted
+

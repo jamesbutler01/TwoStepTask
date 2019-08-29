@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/Maths.py" line="210" />
+    <bookmark url="file://$PROJECT_DIR$/Maths.py" line="224" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="21554b2a-9f39-4912-8d05-ba9fa7110c89" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Details.py" beforeDir="false" afterPath="$PROJECT_DIR$/Details.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ExampleAnalysis_Decoder.py" beforeDir="false" afterPath="$PROJECT_DIR$/ExampleAnalysis_Decoder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ImportData.py" beforeDir="false" afterPath="$PROJECT_DIR$/ImportData.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ManagerAnalysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/ManagerAnalysis.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ManagerDecoder.py" beforeDir="false" afterPath="$PROJECT_DIR$/ManagerDecoder.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Maths.py" beforeDir="false" afterPath="$PROJECT_DIR$/Maths.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/Plot.py" afterDir="false" />
@@ -20,35 +22,14 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/ManagerDecoder.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="429">
-              <caret line="186" column="24" selection-start-line="186" selection-start-column="24" selection-end-line="186" selection-end-column="24" />
+            <state relative-caret-position="431">
+              <caret line="207" column="3" selection-start-line="207" selection-start-column="3" selection-end-line="207" selection-end-column="3" />
               <folding>
                 <element signature="e#0#17#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/BehaviourAnalysis.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="168">
-              <caret line="62" column="58" selection-start-line="62" selection-start-column="58" selection-end-line="62" selection-end-column="58" />
-              <folding>
-                <element signature="e#158#175#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ExampleAnalysis_Decoder.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="480">
-              <caret line="24" column="26" selection-start-line="24" selection-start-column="26" selection-end-line="24" selection-end-column="26" />
             </state>
           </provider>
         </entry>
@@ -56,65 +37,24 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Plot.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="190">
-              <caret line="96" column="30" selection-start-line="96" selection-start-column="30" selection-end-line="96" selection-end-column="30" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ExampleAnalysis_Regression.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="335">
-              <caret line="50" column="26" selection-start-line="50" selection-start-column="26" selection-end-line="50" selection-end-column="26" />
+            <state relative-caret-position="432">
+              <caret line="291" selection-start-line="291" selection-end-line="291" />
               <folding>
-                <element signature="e#0#19#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/Utils.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="160">
-              <caret line="8" column="40" selection-start-line="8" selection-start-column="40" selection-end-line="8" selection-end-column="40" />
-              <folding>
-                <element signature="e#0#19#0" expanded="true" />
+                <element signature="e#0#18#0" expanded="true" />
+                <element signature="e#8098#9583#0" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ExampleAnalysis_FiringRate.py">
+        <entry file="file://$PROJECT_DIR$/Maths.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="478">
-              <caret line="58" column="20" selection-start-line="58" selection-start-column="20" selection-end-line="58" selection-end-column="20" />
+            <state relative-caret-position="1590">
+              <caret line="361" column="42" selection-start-line="361" selection-start-column="42" selection-end-line="361" selection-end-column="42" />
               <folding>
-                <element signature="e#0#19#0" expanded="true" />
+                <element signature="e#0#12#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ManagerAnalysis.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="198">
-              <caret line="30" column="8" selection-start-line="30" selection-start-column="8" selection-end-line="30" selection-end-column="8" />
-              <folding>
-                <element signature="e#0#17#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Dec_Follow2or1.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="240">
-              <caret line="12" column="6" selection-start-line="12" selection-start-column="6" selection-end-line="12" selection-end-column="6" />
             </state>
           </provider>
         </entry>
@@ -122,11 +62,41 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Details.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="340">
-              <caret line="77" column="16" selection-start-line="77" selection-start-column="16" selection-end-line="77" selection-end-column="16" />
+            <state relative-caret-position="440">
+              <caret line="72" column="13" selection-start-line="72" selection-start-column="13" selection-end-line="72" selection-end-column="13" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Dec_SampleSizeEffect.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="100">
+              <caret line="5" column="51" selection-start-line="5" selection-start-column="51" selection-end-line="5" selection-end-column="51" />
+              <folding>
+                <element signature="e#0#19#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Dec_TransByRew.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="520">
+              <caret line="26" column="77" selection-start-line="26" selection-start-column="77" selection-end-line="26" selection-end-column="77" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Dec_Repeated2s.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="240">
+              <caret line="12" lean-forward="true" selection-start-line="12" selection-end-line="12" />
             </state>
           </provider>
         </entry>
@@ -142,15 +112,12 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>generalpl</find>
-      <find>D.save</find>
       <find>savefig</find>
       <find>_numiter</find>
       <find>sig</find>
       <find>zero</find>
       <find>option</find>
       <find>pvals</find>
-      <find>print</find>
       <find>raise e</find>
       <find>anova</find>
       <find>stickorsw</find>
@@ -160,6 +127,21 @@
       <find>_makeandplotavgs</find>
       <find>'--'</find>
       <find>legend</find>
+      <find>splitd</find>
+      <find>train</find>
+      <find>previouspre</find>
+      <find>train te</find>
+      <find>multi</find>
+      <find>peak_cond</find>
+      <find>splitdata</find>
+      <find>D.areas</find>
+      <find>black</find>
+      <find>peak_epo</find>
+      <find>replace=</find>
+      <find>np.random.choice</find>
+      <find>sigcl</find>
+      <find>m.choice</find>
+      <find>print</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -172,29 +154,42 @@
         <option value="$PROJECT_DIR$/TimeFunction.py" />
         <option value="$PROJECT_DIR$/Figures/readme" />
         <option value="$PROJECT_DIR$/RL_tstats.py" />
-        <option value="$PROJECT_DIR$/temp.py" />
         <option value="E:/Regression_SigTest.py" />
         <option value="$PROJECT_DIR$/ExampleAnalysis_Regression.py" />
         <option value="$PROJECT_DIR$/ExampleAnalysis_FiringRate.py" />
-        <option value="$PROJECT_DIR$/ImportData.py" />
         <option value="$PROJECT_DIR$/Behav.py" />
         <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/Utils.py" />
-        <option value="$PROJECT_DIR$/ManagerAnalysis.py" />
-        <option value="$PROJECT_DIR$/Dec_Follow2or1.py" />
-        <option value="$PROJECT_DIR$/Maths.py" />
         <option value="$PROJECT_DIR$/BehaviourAnalysis.py" />
+        <option value="E:/ExampleAnalysis_Decoder.py" />
+        <option value="E:/ManagerDecoder.py" />
         <option value="$PROJECT_DIR$/ExampleAnalysis_Decoder.py" />
+        <option value="$PROJECT_DIR$/ManagerAnalysis.py" />
+        <option value="$PROJECT_DIR$/Dec_ForcedChoice.py" />
+        <option value="$PROJECT_DIR$/Dec_Losing2.py" />
+        <option value="$USER_HOME$/Google Drive/PostDoc/Dev/PycharmProjects/TwoStepTask/ImportData.py" />
+        <option value="$PROJECT_DIR$/ImportData.py" />
+        <option value="$PROJECT_DIR$/Dec_First2.py" />
+        <option value="$PROJECT_DIR$/Dec_Repeated2s_2conds.py" />
+        <option value="$PROJECT_DIR$/Dec_Follow2or1.py" />
+        <option value="$PROJECT_DIR$/Dec_Discover2.py" />
+        <option value="$PROJECT_DIR$/Dec_A2AR.py" />
+        <option value="$PROJECT_DIR$/Dec_TransByRew.py" />
+        <option value="$PROJECT_DIR$/temp.py" />
+        <option value="$PROJECT_DIR$/Pipeline.py" />
+        <option value="$PROJECT_DIR$/Dec_Repeated2s.py" />
+        <option value="$PROJECT_DIR$/Dec_SampleSizeEffect.py" />
+        <option value="$PROJECT_DIR$/Maths.py" />
+        <option value="$PROJECT_DIR$/Plot.py" />
         <option value="$PROJECT_DIR$/Details.py" />
         <option value="$PROJECT_DIR$/ManagerDecoder.py" />
-        <option value="$PROJECT_DIR$/Plot.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="-8" />
     <option name="y" value="-8" />
-    <option name="width" value="1924" />
+    <option name="width" value="1936" />
     <option name="height" value="1056" />
   </component>
   <component name="ProjectView">
@@ -202,6 +197,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -214,21 +210,15 @@
               <item name="TwoStepTask" type="462c0819:PsiDirectoryNode" />
               <item name="figures" type="462c0819:PsiDirectoryNode" />
             </path>
-            <path>
-              <item name="TwoStepTask" type="b2602c69:ProjectViewProjectNode" />
-              <item name="TwoStepTask" type="462c0819:PsiDirectoryNode" />
-              <item name="figures" type="462c0819:PsiDirectoryNode" />
-              <item name="dec" type="462c0819:PsiDirectoryNode" />
-            </path>
           </expand>
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$USER_HOME$/Google Drive/PostDoc/Dev/PycharmProjects/Old/ProcessImageStimuli" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="restartRequiresConfirmation" value="false" />
     <property name="settings.editor.selected.configurable" value="preferences.keymap" />
   </component>
@@ -249,8 +239,8 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.ExampleAnalysis_Regression">
-    <configuration name="BehaviourAnalysis" type="PythonConfigurationType" factoryName="Python" temporary="true">
+  <component name="RunManager" selected="Python.Dec_Repeated2s">
+    <configuration name="Dec_Repeated2s" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="TwoStepTask" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -262,7 +252,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/BehaviourAnalysis.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Dec_Repeated2s.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -271,7 +261,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="Dec_Follow2or1" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="Dec_SampleSizeEffect" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="TwoStepTask" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -283,7 +273,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Dec_Follow2or1.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Dec_SampleSizeEffect.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -313,27 +303,6 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="ExampleAnalysis_Decoder" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="TwoStepTask" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/ExampleAnalysis_Decoder.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration name="ExampleAnalysis_Regression" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="TwoStepTask" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -355,20 +324,41 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="Pipeline" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="TwoStepTask" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Pipeline.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <list>
-      <item itemvalue="Python.ExampleAnalysis_Decoder" />
-      <item itemvalue="Python.Dec_Follow2or1" />
-      <item itemvalue="Python.Details" />
-      <item itemvalue="Python.BehaviourAnalysis" />
+      <item itemvalue="Python.Dec_Repeated2s" />
       <item itemvalue="Python.ExampleAnalysis_Regression" />
+      <item itemvalue="Python.Pipeline" />
+      <item itemvalue="Python.Dec_SampleSizeEffect" />
+      <item itemvalue="Python.Details" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.ExampleAnalysis_Regression" />
-        <item itemvalue="Python.ExampleAnalysis_Decoder" />
-        <item itemvalue="Python.BehaviourAnalysis" />
+        <item itemvalue="Python.Dec_Repeated2s" />
         <item itemvalue="Python.Details" />
-        <item itemvalue="Python.Dec_Follow2or1" />
+        <item itemvalue="Python.Dec_SampleSizeEffect" />
+        <item itemvalue="Python.Pipeline" />
+        <item itemvalue="Python.ExampleAnalysis_Regression" />
       </list>
     </recent_temporary>
   </component>
@@ -402,14 +392,34 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.14646997" />
       <window_info id="Structure" order="1" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.30010834" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.35102925" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32936078" />
+      <window_info anchor="bottom" x="1920" y="23" width="1440" height="837" id="Run" maximized="true" order="2" type="WINDOWED" visible="true" weight="0.26977247" />
+      <window_info active="true" anchor="bottom" x="1920" y="23" width="1440" height="837" id="Debug" maximized="true" order="3" type="WINDOWED" visible="true" weight="0.3726977" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Version Control" order="7" weight="0.32936078" />
+      <window_info anchor="bottom" id="Terminal" order="8" />
+      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
+      <window_info anchor="bottom" id="Python Console" order="10" weight="0.032502707" />
+      <window_info anchor="right" id="Commander" order="0" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+    </layout>
+    <layout-to-restore>
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.14646997" />
+      <window_info id="Structure" order="1" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32936078" />
+      <window_info anchor="bottom" x="1920" y="23" width="1440" height="837" id="Run" maximized="true" order="2" type="WINDOWED" visible="true" weight="0.26977247" />
+      <window_info anchor="bottom" id="Debug" order="3" visible="true" weight="0.35102925" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
@@ -420,7 +430,7 @@
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
-    </layout>
+    </layout-to-restore>
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Tidy up files" />
@@ -431,9 +441,9 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Maths.py</url>
-          <line>163</line>
-          <option name="timeStamp" value="7" />
+          <url>file://$PROJECT_DIR$/Dec_SampleSizeEffect.py</url>
+          <line>23</line>
+          <option name="timeStamp" value="39" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -465,21 +475,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/temp.py" />
-    <entry file="file://C:/Anaconda/Lib/site-packages/numpy/core/fromnumeric.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="163">
-          <caret line="505" column="4" selection-start-line="505" selection-start-column="4" selection-end-line="505" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://C:/Anaconda/Lib/multiprocessing/pool.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="963">
-          <caret line="643" selection-start-line="643" selection-end-line="643" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://E:/Regression_SigTest.py" />
     <entry file="file://C:/Anaconda/Lib/site-packages/IPython/core/interactiveshell.py">
       <provider selected="true" editor-type-id="text-editor">
@@ -495,55 +490,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/.PyCharmCE2018.3/system/python_stubs/-946255732/scipy/special/_ufuncs.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="49780">
-          <caret line="2490" column="4" selection-start-line="2490" selection-start-column="4" selection-end-line="2490" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$USER_HOME$/.PyCharmCE2018.3/system/python_stubs/-946255732/scipy/special/_ufuncs.py" />
     <entry file="file://$USER_HOME$/Google Drive/PostDoc/Dev/Stimuli/CogMaps/NameFiles.py">
       <provider selected="true" editor-type-id="text-editor">
         <state>
           <folding>
             <element signature="e#0#11#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Maths.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="289">
-          <caret line="210" column="8" selection-start-line="210" selection-start-column="4" selection-end-line="210" selection-end-column="8" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/BehaviourAnalysis.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="168">
-          <caret line="62" column="58" selection-start-line="62" selection-start-column="58" selection-end-line="62" selection-end-column="58" />
-          <folding>
-            <element signature="e#158#175#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ImportData.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="555">
-          <caret line="169" column="13" selection-start-line="169" selection-start-column="13" selection-end-line="169" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Details.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="340">
-          <caret line="77" column="16" selection-start-line="77" selection-start-column="16" selection-end-line="77" selection-end-column="16" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -556,33 +508,19 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ManagerDecoder.py">
+    <entry file="file://$PROJECT_DIR$/BehaviourAnalysis.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="429">
-          <caret line="186" column="24" selection-start-line="186" selection-start-column="24" selection-end-line="186" selection-end-column="24" />
+        <state relative-caret-position="1160">
+          <caret line="62" column="58" selection-start-line="62" selection-start-column="58" selection-end-line="62" selection-end-column="58" />
           <folding>
-            <element signature="e#0#17#0" expanded="true" />
+            <element signature="e#158#175#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ExampleAnalysis_Decoder.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="480">
-          <caret line="24" column="26" selection-start-line="24" selection-start-column="26" selection-end-line="24" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Dec_Follow2or1.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="12" column="6" selection-start-line="12" selection-start-column="6" selection-end-line="12" selection-end-column="6" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ExampleAnalysis_FiringRate.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="478">
+        <state relative-caret-position="1060">
           <caret line="58" column="20" selection-start-line="58" selection-start-column="20" selection-end-line="58" selection-end-column="20" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
@@ -590,26 +528,104 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://E:/ExampleAnalysis_Decoder.py" />
+    <entry file="file://E:/ManagerDecoder.py" />
+    <entry file="file://E:/Maths.py" />
+    <entry file="file://$PROJECT_DIR$/ExampleAnalysis_Decoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="300">
+          <caret line="15" column="34" lean-forward="true" selection-start-line="15" selection-start-column="34" selection-end-line="15" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Google Drive/PostDoc/Dev/PycharmProjects/TwoStepTask/Details.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-200" />
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Google Drive/PostDoc/Dev/PycharmProjects/TwoStepTask/Figure0.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-line="39" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Anaconda/Lib/site-packages/matplotlib/pyplot.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="13">
+          <caret line="749" column="4" selection-start-line="749" selection-start-column="4" selection-end-line="749" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Google Drive/PostDoc/Dev/PycharmProjects/TwoStepTask/Figure2Rew.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="342">
+          <caret line="321" column="46" selection-start-line="321" selection-start-column="34" selection-end-line="321" selection-end-column="46" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/ManagerAnalysis.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="198">
-          <caret line="30" column="8" selection-start-line="30" selection-start-column="8" selection-end-line="30" selection-end-column="8" />
+        <state relative-caret-position="36">
+          <caret line="13" selection-start-line="13" selection-end-line="13" />
           <folding>
             <element signature="e#0#17#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Plot.py">
+    <entry file="file://$PROJECT_DIR$/Dec_Foraging.py" />
+    <entry file="file://$USER_HOME$/Google Drive/PostDoc/Dev/PycharmProjects/TwoStepTask/ImportData.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="190">
-          <caret line="96" column="30" selection-start-line="96" selection-start-column="30" selection-end-line="96" selection-end-column="30" />
+        <state relative-caret-position="453">
+          <caret line="250" column="53" lean-forward="true" selection-start-line="237" selection-start-column="1" selection-end-line="250" selection-end-column="53" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Dec_Repeated2s_2conds.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="140">
+          <caret line="7" column="13" selection-start-line="7" selection-start-column="13" selection-end-line="7" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Anaconda/Lib/site-packages/sklearn/model_selection/_split.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="298">
+          <caret line="1545" selection-start-line="1545" selection-end-line="1545" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Anaconda/Lib/site-packages/sklearn/utils/validation.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="298">
+          <caret line="461" selection-start-line="461" selection-end-line="461" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ImportData.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="480">
+          <caret line="24" column="19" selection-start-line="24" selection-start-column="19" selection-end-line="24" selection-end-column="37" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/temp.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="10" selection-start-line="10" selection-end-line="24" />
+          <folding>
+            <element signature="e#0#17#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ExampleAnalysis_Regression.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="335">
+        <state relative-caret-position="612">
           <caret line="50" column="26" selection-start-line="50" selection-start-column="26" selection-end-line="50" selection-end-column="26" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
@@ -617,12 +633,140 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Utils.py">
+    <entry file="file://$PROJECT_DIR$/Dec_A2AR.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="260">
+          <caret line="13" selection-start-line="13" selection-end-line="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Dec_Follow2or1.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="160">
-          <caret line="8" column="40" selection-start-line="8" selection-start-column="40" selection-end-line="8" selection-end-column="40" />
+          <caret line="8" column="38" selection-start-line="8" selection-start-column="38" selection-end-line="8" selection-end-column="38" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Dec_Discover2.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="160">
+          <caret line="8" column="41" selection-start-line="8" selection-start-column="41" selection-end-line="8" selection-end-column="41" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Dec_ForcedChoice.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="18" selection-start-line="18" selection-end-line="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Dec_Losing2.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="520">
+          <caret line="26" column="13" selection-start-line="26" selection-start-column="13" selection-end-line="26" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Pipeline.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="140">
+          <caret line="7" column="1" selection-start-line="7" selection-start-column="1" selection-end-line="7" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Dec_TransByRew.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="520">
+          <caret line="26" column="77" selection-start-line="26" selection-start-column="77" selection-end-line="26" selection-end-column="77" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Dec_SampleSizeEffect.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="100">
+          <caret line="5" column="51" selection-start-line="5" selection-start-column="51" selection-end-line="5" selection-end-column="51" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/.PyCharmCE2019.1/system/python_stubs/-946255732/numpy/random/mtrand.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="458">
+          <caret line="2421" column="16" selection-start-line="2421" selection-start-column="16" selection-end-line="2421" selection-end-column="50" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Anaconda/Lib/multiprocessing/pool.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="182">
+          <caret line="643" selection-start-line="643" selection-end-line="643" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Anaconda/Lib/site-packages/numpy/core/fromnumeric.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="298">
+          <caret line="933" selection-start-line="933" selection-end-line="933" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="6" column="4" selection-start-line="6" selection-start-column="4" selection-end-line="6" selection-end-column="4" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Plot.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="432">
+          <caret line="291" selection-start-line="291" selection-end-line="291" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+            <element signature="e#8098#9583#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Maths.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1590">
+          <caret line="361" column="42" selection-start-line="361" selection-start-column="42" selection-end-line="361" selection-end-column="42" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Details.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="440">
+          <caret line="72" column="13" selection-start-line="72" selection-start-column="13" selection-end-line="72" selection-end-column="13" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Dec_Repeated2s.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="12" lean-forward="true" selection-start-line="12" selection-end-line="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ManagerDecoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="431">
+          <caret line="207" column="3" selection-start-line="207" selection-start-column="3" selection-end-line="207" selection-end-column="3" />
+          <folding>
+            <element signature="e#0#17#0" expanded="true" />
           </folding>
         </state>
       </provider>

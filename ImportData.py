@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy.io
 import scipy.ndimage
 import pandas as pd
@@ -13,10 +12,11 @@ class EntireArea:
         self.cells_index = GetCellsIndexForArea(area)
         self.n = self.cells_index.n
         self.savefolder = f'{D.dir_npstorage}{D.smooth_savedir}'
+        struct = scipy.io.loadmat(D.dir_task_details)['PreparedData']
 
         self.behavdata = []
         for i in range(self.n):
-            self.behavdata.append(GetBehavInfoForCell(self.cells_index, i))
+            self.behavdata.append(GetBehavInfoForCell(struct, self.cells_index, i))
 
     def generatenormalisedepoch(self, cell, epoch):
         savepath = f'{self.savefolder}norm/{self.area}_{cell}_{epoch}.npy'
@@ -138,10 +138,9 @@ class EntireArea:
 
 # Helper to extract task details for a specific cell
 class GetBehavInfoForCell:
-    def __init__(self, cells_index, cell):
+    def __init__(self, struct, cells_index, cell):
         subj = cells_index.subjindex[cell]
         sess = cells_index.sess_index[cell]
-        struct = scipy.io.loadmat(D.dir_task_details)['PreparedData']
 
         # Make mask of valid trials in session
         self.totalnumtrials = np.array(struct[subj][0][sess][0][D.ind_totalnumtrials].flatten(), dtype=int)
@@ -150,6 +149,11 @@ class GetBehavInfoForCell:
         self.validtrials -= 1  # Correct matlab indexing
         validtrialsmask[self.validtrials] = 1
         self.validtrialsmask = np.array(validtrialsmask, dtype=int)
+
+        # Trialtype codes:
+        # 1 == choice level 1 and choice level 2 trial
+        # 2 == FORCED choice level 1 and choice level 2 trial
+        # 3 == choice level 1 and FORCED choice level 2 trial
 
         self.trialtype = np.array(struct[subj][0][sess][0][D.ind_trialtype].flatten(), dtype=int)
         self.transition = np.array(struct[subj][0][sess][0][D.ind_transition].flatten(), dtype=int)
@@ -178,6 +182,7 @@ class GetBehavInfoForCell:
             return output
 
         self.previousreward = makeprevarr(1, self.rewgiven)
+        self.previouspreviousreward = makeprevarr(1, self.previousreward)
         self.previousrewardcoll = makeprevarr(1, self.rew_coll)
         self.previouschoice2 = makeprevarr(1, self.choice2)
         self.previouschoice1g = makeprevarr(1, self.c1given)
@@ -221,6 +226,21 @@ class GetBehavInfoForCell:
                         self.repeatc2atc1[tr] = 1
                     else:
                         self.repeatc2atc1[tr] = 0
+
+        # Number of repeated 2s in a row
+        # 0 = medium, low, or unexpected 2
+        # 1 = first time expected 2
+        # So have to filter by rew given if you just want data for 2s response
+        self.num_rew2c2repeats = np.empty(self.switchchoice1.shape, dtype=int)
+        numrepeats = 0
+        for i_tr, (rew, switchc2) in enumerate(zip(self.rewgiven, self.switchchoice2)):
+
+            if rew == 2 and switchc2 == 0:
+                numrepeats += 1
+            else:
+                numrepeats = 0
+
+            self.num_rew2c2repeats[i_tr] = numrepeats
 
         # Find prev rewards for choice2
         self.samec2_prevrew1 = np.zeros(self.n, dtype=int)

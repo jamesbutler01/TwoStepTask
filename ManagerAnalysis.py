@@ -12,19 +12,6 @@ class MyManager(multiprocessing.managers.BaseManager):
 
 MyManager.register('np_zeros', np.zeros, multiprocessing.managers.ArrayProxy)
 
-if False:
-    import ImportData
-    cell = 1
-    area = D.areas[0]
-    data = ImportData.EntireArea(area)
-    trialdata = data.behavdata[cell]
-    x_type = 'r'
-    num_conds=4
-    out_betas = np.zeros((1, num_conds, D.numtrialepochs, data.n, D.num_timepoints))
-    data_inc = 't0 high'
-    fr='norm'
-    firingperiod = 't1'
-
 
 class Run:
 

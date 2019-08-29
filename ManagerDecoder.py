@@ -21,11 +21,10 @@ def removeinvalidentries(arr_in, check_arr):
     return arr_in[check_arr != -1]
 
 
-def analysearea(unique_func, num_conds, accs_out, sems_out, run_sig_test, sigclusters, decoder, minsamples, dists_all, i_area):
+def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_all, peak_epoch, peak_cond, train_across_conds, upsample, i_area):
 
     data = ImportData.EntireArea(D.areas[i_area])
-    validcells = np.ones(data.n, bool)
-    min_across_cells = 999
+    dists = Maths.nans(dists_all[i_area].shape)
 
     # First we need to work out what the minimum number of samples across all cells
     for cell in range(data.n):
@@ -40,49 +39,54 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, run_sig_test, sigclu
         labels = [np.unique(x_data[mask]) for mask in masks]
         numitems = [len(label) for label in labels]
 
-        cell_min = 999
-
         # Iterate through each condition
-        for i_mask, (mask, label) in enumerate(zip(masks, labels)):
+        for i_cond, (m_cond, label) in enumerate(zip(masks, labels)):
 
             # Get fewest number of trials for the different labels
-            this_min = np.min([sum(x_data[mask] == lab) for lab in label])
+            dists[i_cond, cell] = np.min([sum(x_data[m_cond] == lab) for lab in label])
 
-            # If lower than current lowest store it
-            if this_min < cell_min:
-                cell_min = this_min
+    dists_all[i_area] = dists
+    trials_per_label = np.array(np.nanmin(dists, axis=1), dtype=int)
 
-        # Store data to plot
-        dists_all[i_area, cell] = cell_min
-        
-        # If this cell lower n than all previous cells then update min_across_cells
-        if cell_min < min_across_cells:
-            min_across_cells = cell_min
-        
-        # If not above specified minimum then disable this cell for the future analysis
-        if cell_min < minsamples:
-            validcells[cell] = False
-    
+    # Any without enough trials will be excluded
+    trials_per_label[trials_per_label < D.dec_minsamples] = D.dec_minsamples
+
+    # Only allow cells with enough trials per label
+    validcells = dists.T[:data.n] >= D.dec_minsamples
+
+    # Need same amount of trials for each cond in this case
+    if train_across_conds or True:
+        # Correct min trials per label to all be the same
+        trials_per_label[trials_per_label != np.min(trials_per_label)] = np.min(trials_per_label)
+
+        # Redo mask to make sure same cells are excluded from every analysis
+        new_valid_cells = np.nanmin(dists.T[:data.n], axis=1) > trials_per_label[0]
+        for i in range(len(validcells.T)):
+            validcells[:, i] = new_valid_cells[:len(validcells)]
+
+    max_across_conds = np.max(trials_per_label)
+
     # Now we know the maximum of trials to use with the decoder
-    print(f'Area: {D.areas[i_area]} has {min_across_cells} minimum samples, {int(np.mean(validcells)*100)}% cells included ({sum(validcells)})')
-
+    print(f'{D.areanames[i_area]} has {trials_per_label} min trials per condition, {int(np.mean(validcells)*100)}% cells included ({sum(validcells)})')
 
     def run_decoder(permtest=False):
+
         # Make holding arrays for analysis
         accs_perms = np.empty((num_conds, D.numtrialepochs, D.num_timepoints, D.dec_numiters))
 
         for i_cellselection in range(D.dec_numiters):
-            y_all = np.empty((D.numtrialepochs, num_conds, sum(validcells), min_across_cells * np.max(numitems), D.num_timepoints))
-            x_all = np.empty((D.numtrialepochs, num_conds, sum(validcells), min_across_cells * np.max(numitems)))
+
+            y_all = np.empty((D.numtrialepochs, num_conds, data.n, max_across_conds * np.max(numitems), D.num_timepoints))
+            x_all = np.empty((D.numtrialepochs, num_conds, data.n, max_across_conds * np.max(numitems)))
             y_all.fill(np.nan)
             x_all.fill(np.nan)
 
             # Loop to collect all the data from the different cells that had enough trials
-            for i_cell, cell in enumerate(np.where(validcells == 1)[0]):
+            for cell, cell_validity in enumerate(validcells):
 
                 td = data.behavdata[cell]
 
-                x_data, masks = unique_func(td)
+                x_data, m_conds = unique_func(td)
 
                 # For each epoch
                 for i_epoch, epoch in enumerate(D.epochs):
@@ -90,9 +94,14 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, run_sig_test, sigclu
                     y = data.generatenormalisedepoch(cell, epoch)
 
                     # For each condition get the data
-                    for i_mask, mask in enumerate(masks):
-                        y_masked = y[mask]
-                        x_masked = x_data[mask]
+                    for i_cond, (m_cond, min_trials, valid_cell) in enumerate(zip(m_conds, trials_per_label, cell_validity)):
+
+                        # Skip cells without enough trials for a certain condition
+                        if not valid_cell:
+                            continue
+
+                        y_masked = y[m_cond]
+                        x_masked = x_data[m_cond]
 
                         # Remove any potential -1's in the x data
                         y_masked = removeinvalidentries(y_masked, x_masked)
@@ -100,7 +109,7 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, run_sig_test, sigclu
 
                         # Shuffle
                         if permtest:
-                            np.random.shuffle(y_masked)
+                            np.random.shuffle(x_masked)
 
                         # For each label
                         for i_x, x_val in enumerate(np.unique(x_masked)):
@@ -109,19 +118,18 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, run_sig_test, sigclu
                             y_for_xval = y_masked[x_masked == x_val]
 
                             # Choose random subset of y data
-                            ind_inc_trials = np.random.choice(len(y_for_xval), min_across_cells, replace=False)
+                            ind_inc_trials = np.random.choice(len(y_for_xval), min_trials, replace=False)
 
                             # Store x and y data in holding arrays
-                            y_all[i_epoch, i_mask, i_cell, min_across_cells * (i_x):min_across_cells * (i_x + 1), :] = y_for_xval[
-                                ind_inc_trials]
-                            x_all[i_epoch, i_mask, i_cell, min_across_cells * (i_x):min_across_cells * (i_x + 1)] = i_x
+                            y_all[i_epoch, i_cond, cell, min_trials * (i_x):min_trials * (i_x + 1), :] = y_for_xval[ind_inc_trials]
+                            x_all[i_epoch, i_cond, cell, min_trials * (i_x):min_trials * (i_x + 1)] = i_x
 
             # Now we have all our data with equal number of samples for each label and each cell, we can run the decoder
-            scores = Maths.decode_across_epochs(x_all, y_all, decoder)
+            scores = Maths.decode_across_epochs(x_all, y_all, peak_epoch, peak_cond, train_across_conds, permtest)
 
             accs_perms[:, :, :, i_cellselection] = scores
 
-            print(f'{D.areas[i_area]} Progress: {i_cellselection+1}/{D.dec_numiters}')
+            if not permtest: print(f'{D.areanames[i_area]} Progress: {i_cellselection+1}/{D.dec_numiters}')
 
         return accs_perms
 
@@ -129,66 +137,132 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, run_sig_test, sigclu
 
     accs_out[i_area, 0] = np.mean(accs_allperms, axis=3)
 
+    null_dist = Maths.calc_sig_length_null_dist()
+
+    # Also do t-test at every time point
+    for i_cond in range(num_conds):
+
+        for i_epoch in range(D.numtrialepochs):
+
+            pvals = np.empty(D.num_timepoints)
+
+            for i_ti in range(D.num_timepoints):
+                pvals[i_ti] = Maths.ttest_1samp(accs_allperms[i_cond, i_epoch, i_ti], 0.5)
+
+            # Swap NaNs to 1's
+            pvals[np.isnan(pvals)] = 1
+
+            # See which runs are significantly long
+            sigcluster = np.zeros(D.num_timepoints)
+
+            pvals_bool = pvals < 0.05
+
+            for i in range(D.num_timepoints):
+
+                onecluster, clusterlength = Maths.findlongestrun(pvals_bool)
+
+                if sum(null_dist > clusterlength) > D.sigthreshold_onetailed or clusterlength < 1:
+
+                    # If no significance then stop looking
+                    break
+
+                else:
+
+                    # Significant, so add it to marker
+                    sigcluster += onecluster
+
+                    # Erase points that gave significance (set different conds to same value so they are not sig. anymore)
+                    pvals_bool[sigcluster == 1] = 1
+
+            pvals[~np.array(sigcluster, dtype=bool)] = 1
+
+            accs_out[i_area, 1, i_cond, i_epoch] = pvals
+
     std = np.nanstd(accs_allperms, axis=3)
     sem = std / np.sqrt(D.dec_numiters)
 
     sems_out[i_area, 0] = sem
 
-    print(f'{D.areas[i_area]} Finished decoding')
+    print(f'{D.areanames[i_area]} Finished decoding')
 
-    if run_sig_test:
+    if D.dec_do_perms:
 
-        num_iters = D.numperms//D.dec_numiters
-        accs_permtest = np.empty((num_conds, D.numtrialepochs, D.num_timepoints, D.numperms - (D.numperms % D.dec_numiters)))
+        num_iters = D.numperms
+        accs_permtest = np.empty((num_conds, D.numperms))
 
         for i in range(num_iters):
-            accs_permtest[:, :, :,i*D.dec_numiters: (i+1)*D.dec_numiters] = run_decoder(True)
-            print(f'{D.areas[i_area]} Permutation progress: {i+1}/{num_iters}')
+            one_perm = run_decoder(True)
+            accs_permtest[:, i] = np.mean(one_perm[:, 0, 0, :], axis=1)
+            print(f'{D.areanames[i_area]} Permutation progress: {i+1}/{num_iters}')
 
         # Get CI
-        accs_sorted = np.sort(accs_permtest, axis=3)  # Sort permutations
+        accs_sorted = np.sort(accs_permtest, axis=1)  # Sort permutations
         sigthreshold = D.sigthreshold_onetailed
         if sigthreshold == 0: sigthreshold = 1  # -0 indexing doesn't work
-        accs_ci = accs_sorted[:, :, :, -sigthreshold]  # Take the 95th highest permutation
-        sigclusters[i_area, 0] = accs_ci
+        accs_ci = accs_sorted[:, -sigthreshold]  # Take the 95th highest permutation
+        if num_conds > D.numtrialepochs:
+            raise Exception('You cannot have more conds than epochs as no where to store the perm data')
 
-        # TODO: Find how long runs of significance are as in regression analysis
+        sigclusters[i_area] = accs_ci
 
-
+   
 class Run:
 
-    def __new__(cls, function_to_run, run_sig_test, num_conds, num_rows, maintitle, ytitles, savefolder, trace_names, decoder, minsamples=4):
+    def __new__(cls, function_to_run, trace_names, peak_epoch=None, peak_cond=None, train_across_conds=False, areas=range(D.numareas), maintitle='Decoder', savefolder='dec/temp', upsample=None):
+
+        if upsample is None:
+            upsample = D.dec_upsample
+
         timer = TimeFunction.Timer()
+        num_conds = len(trace_names)
+        accs_all, sems_all, _ = Utils.getarrs(num_conds, 2)
+        sigclusters = np.empty((D.numareas, num_conds))
+        dists_all = np.zeros((D.numareas, num_conds, 300))
 
-        if num_rows > 1:
-            raise Exception('Multiple rows not implemented yet')
+        if D.domultiproc:
 
-        m = MyManager()
-        m.start()
+            m = MyManager()
+            m.start()
 
-        accs_all, sems_all, sigclusters = Utils.getarrs(num_conds, num_rows)
-        sigclusters = m.np_zeros(accs_all.shape)  # Same shape as actual values for decoder analysis
-        accs_all = m.np_zeros(accs_all.shape)
-        sems_all = m.np_zeros(sems_all.shape)
-        dists_all = m.np_zeros((D.numareas, 300))
+            sigclusters = m.np_zeros(sigclusters.shape)
+            accs_all = m.np_zeros(accs_all.shape)
+            sems_all = m.np_zeros(sems_all.shape)
+            dists_all = m.np_zeros(dists_all.shape)
 
-        pool = Pool(5)
-        func = partial(analysearea, function_to_run, num_conds, accs_all, sems_all, run_sig_test, sigclusters, decoder, minsamples, dists_all)
-        run_list = range(len(D.areas))
-        pool.map(func, run_list)
-        pool.close()
+            pool = Pool(5)
+            func = partial(analysearea, function_to_run, num_conds, accs_all, sems_all, sigclusters, dists_all, peak_epoch, peak_cond, train_across_conds, upsample)
+            pool.map(func, areas)
+            pool.close()
 
-        accs_all = np.array(accs_all)
+            accs_all = np.array(accs_all)
 
-        print(timer.elapsedtime())
+        else:
 
-        Plot.GeneralPlot(accs_all, sems_all, sigclusters, trace_names, savefolder, ytitles, maintitle, scale_sig=False, show_sig=run_sig_test)
+            dists_all = np.zeros((D.numareas, num_conds, 300))
 
-        Plot.GeneralAllAreas(accs_all, sems_all, sigclusters, trace_names, savefolder, ytitles, maintitle, scale_sig=False, show_sig=run_sig_test)
+            for i_area in areas:
+                analysearea(function_to_run, num_conds, accs_all, sems_all, sigclusters, dists_all, peak_epoch, peak_cond, train_across_conds, upsample, i_area)
+
+        # Plot details
+        ylabel = 'Accuracy (%)'
+        trials_per_label = np.array(np.nanmin(dists_all[0], axis=1), dtype=int)
+        trials_per_label[trials_per_label < D.dec_minsamples] = D.dec_minsamples
+        trace_names = [t+f' ({n})' for t, n in zip(trace_names, trials_per_label)]
+
+        Plot.GeneralPlot(accs_all[:, 0:1], sems_all[:, 0:1], sigclusters[:, 0:1], trace_names, savefolder, ylabel, maintitle, scale_sig=False, show_sig=False)
+
+        Plot.GeneralAllAreas(accs_all[:, 0:1], sems_all[:, 0:1], sigclusters[:, 0:1], trace_names, savefolder, ylabel, maintitle, scale_sig=False, show_sig=False)
+
+        Plot.DecoderSignificant_AllAreas(accs_all, sems_all, sigclusters, trace_names, savefolder, ylabel, maintitle, scale_sig=False, show_sig=False)
+
+        if D.dec_do_perms:
+            Plot.DecoderPermSig_AllAreas(accs_all, sems_all, sigclusters, trace_names, savefolder, ylabel, maintitle, scale_sig=False, show_sig=True)
 
         Plot.PlotDist(dists_all, savefolder)
 
-        return accs_all, sems_all, sigclusters, trace_names, savefolder, ytitles, maintitle
+        print(timer.elapsedtime())
+
+        return accs_all, sems_all, sigclusters, trace_names, savefolder, ylabel, maintitle
 
 
 
