@@ -128,23 +128,23 @@ def _makeandplotavgs_permtest(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_la
         ax.plot(s, color=f'C{i_s}', lw=2, ls='--')
 
     # Now plot the data
-    for num, (avg, sem, label, pval) in enumerate(zip(avgs, sems, leg_labels, pvals)):
+    for i_cond, (avg, sem, label, pval, sig) in enumerate(zip(avgs, sems, leg_labels, pvals, sig_in)):
 
         # Split into significant and non-significant data points
         avg_sig = np.copy(avg)
         avg_nosig = np.copy(avg)
 
-        avg_sig[pval>0.05] = np.nan
-        sem[pval>0.05] = np.nan
-        avg_nosig[pval<0.05] = np.nan
+        # Erase non significant bits (below perm threshold)
+        avg_sig[avg_sig<sig] = np.nan
+        sem[avg_sig<sig] = np.nan
 
         if show_leg:
-            ax.plot(avg_sig, label=f'{label}', color=f'C{num}', lw=3)
+            ax.plot(avg_sig, label=f'{label}', color=f'C{i_cond}', lw=2, zorder=10)
         else:
-            ax.plot(avg_sig, color=f'C{num}', lw=3)
-        ax.plot(avg_nosig, color=f'C{num}', lw=0.75)
+            ax.plot(avg_sig, color=f'C{i_cond}', lw=2, zorder=10)
+        ax.plot(avg_nosig, color=f'C{i_cond}', lw=0.75, zorder=1)
 
-        ax.fill_between(range(len(avg)), avg - sem, avg + sem, alpha=0.3, color=f'C{num}')
+        ax.fill_between(range(len(avg)), avg - sem, avg + sem, alpha=0.3, color=f'C{i_cond}')
         ax.set_xlim(0, numpoints)
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
@@ -208,17 +208,6 @@ def GeneralAllAreas(avgs, sems, sigclusters, trace_names, savefolder, ytitles, m
 
     showlegends = [True if i==0 else False for i in range(D.numareas)]
 
-    f, axes_all = plt.subplots(D.numareas, 1, figsize=(width_regplot, height_regplot*D.numareas), sharex=True, sharey=True)
-
-    for i_area, (avgs_area, sems_area, sig_area, axes) in enumerate(zip(avgs, sems, sigclusters, axes_all)):
-        if i_area == 0:
-            _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=D.areanames[i_area], showsig=show_sig, leg_labels=trace_names, show_leg=showlegends, scale_sig=scale_sig)
-        else:
-            _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=D.areanames[i_area], showsig=show_sig, leg_labels=trace_names, show_leg=False, scale_sig=scale_sig)
-
-    _finalplotadjustments(f, maintitle)
-    U.savefig(savefolder, 'all')
-
     f, axes_all = plt.subplots(D.numareas, 1, figsize=(width_regplot, height_regplot*D.numareas), sharex=True)
 
     for i_area, (avgs_area, sems_area, sig_area, axes) in enumerate(zip(avgs, sems, sigclusters, axes_all)):
@@ -229,24 +218,13 @@ def GeneralAllAreas(avgs, sems, sigclusters, trace_names, savefolder, ytitles, m
 
     _finalplotadjustments(f, maintitle)
 
-    U.savefig(savefolder, 'all2')
+    U.savefig(savefolder, 'all')
 
 # Plots result from t-test at every time point comparing accuracy to 50%
 def DecoderSignificant_AllAreas(avgs, sems, sigclusters, trace_names, savefolder, ytitles, maintitle, scale_sig, show_sig=True):
 
     showlegends = [True if i==0 else False for i in range(D.numareas)]
 
-    f, axes_all = plt.subplots(D.numareas, 1, figsize=(width_regplot, height_regplot*D.numareas), sharex=True, sharey=True)
-
-    for i_area, (avgs_area, sems_area, sig_area, axes) in enumerate(zip(avgs, sems, sigclusters, axes_all)):
-        if i_area == 0:
-            _makeandplotavgs_sigdec(avgs_area, sems_area, sig_area, axes, ylab=D.areanames[i_area], showsig=show_sig, leg_labels=trace_names, show_leg=showlegends, scale_sig=scale_sig)
-        else:
-            _makeandplotavgs_sigdec(avgs_area, sems_area, sig_area, axes, ylab=D.areanames[i_area], showsig=show_sig, leg_labels=trace_names, show_leg=False, scale_sig=scale_sig)
-
-    _finalplotadjustments(f, maintitle)
-    U.savefig(savefolder, 'all_sig')
-
     f, axes_all = plt.subplots(D.numareas, 1, figsize=(width_regplot, height_regplot*D.numareas), sharex=True)
 
     for i_area, (avgs_area, sems_area, sig_area, axes) in enumerate(zip(avgs, sems, sigclusters, axes_all)):
@@ -257,7 +235,7 @@ def DecoderSignificant_AllAreas(avgs, sems, sigclusters, trace_names, savefolder
 
     _finalplotadjustments(f, maintitle)
 
-    U.savefig(savefolder, 'all_sig2')
+    U.savefig(savefolder, 'all_sig')
 
 
 def DecoderPermSig_AllAreas(avgs, sems, sigclusters, trace_names, savefolder, ytitles, maintitle, scale_sig, show_sig=True):

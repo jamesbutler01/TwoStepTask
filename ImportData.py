@@ -242,6 +242,20 @@ class GetBehavInfoForCell:
 
             self.num_rew2c2repeats[i_tr] = numrepeats
 
+        # Trials since last had a 2,
+        # 1 = first trial without two (Unexpected 0/1)
+        # 2 = second trial without two (Expected 0/1)
+        self.time_since_2 = np.empty(self.switchchoice1.shape, dtype=int)
+        numrepeats = 0
+        for i_tr, rew in enumerate(self.rewgiven):
+
+            if rew != 2:
+                numrepeats += 1
+            else:
+                numrepeats = 0
+
+            self.time_since_2[i_tr] = numrepeats
+
         # Find prev rewards for choice2
         self.samec2_prevrew1 = np.zeros(self.n, dtype=int)
         self.samec2_prevrew1 -= 1  #  Set all to -1

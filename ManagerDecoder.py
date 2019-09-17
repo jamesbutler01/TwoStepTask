@@ -47,6 +47,7 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_a
 
     dists_all[i_area] = dists
     trials_per_label = np.array(np.nanmin(dists, axis=1), dtype=int)
+    original_trials_per_label = np.copy(trials_per_label)
 
     # Any without enough trials will be excluded
     trials_per_label[trials_per_label < D.dec_minsamples] = D.dec_minsamples
@@ -56,6 +57,7 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_a
 
     # Need same amount of trials for each cond in this case
     if train_across_conds or True:
+
         # Correct min trials per label to all be the same
         trials_per_label[trials_per_label != np.min(trials_per_label)] = np.min(trials_per_label)
 
@@ -66,8 +68,10 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_a
 
     max_across_conds = np.max(trials_per_label)
 
+    num_labels = len(label)
+
     # Now we know the maximum of trials to use with the decoder
-    print(f'{D.areanames[i_area]} has {trials_per_label} min trials per condition, {int(np.mean(validcells)*100)}% cells included ({sum(validcells)})')
+    print(f'{D.areanames[i_area]} has {original_trials_per_label} min trials per condition, {int(np.mean(validcells)*100)}% cells included ({sum(validcells)})')
 
     def run_decoder(permtest=False):
 
@@ -147,7 +151,7 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_a
             pvals = np.empty(D.num_timepoints)
 
             for i_ti in range(D.num_timepoints):
-                pvals[i_ti] = Maths.ttest_1samp(accs_allperms[i_cond, i_epoch, i_ti], 0.5)
+                pvals[i_ti] = Maths.ttest_1samp(accs_allperms[i_cond, i_epoch, i_ti], 1/num_labels)
 
             # Swap NaNs to 1's
             pvals[np.isnan(pvals)] = 1
@@ -187,13 +191,15 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_a
 
     if D.dec_do_perms:
 
-        num_iters = D.numperms
         accs_permtest = np.empty((num_conds, D.numperms))
 
-        for i in range(num_iters):
+        for i in range(D.numperms):
+
             one_perm = run_decoder(True)
+
             accs_permtest[:, i] = np.mean(one_perm[:, 0, 0, :], axis=1)
-            print(f'{D.areanames[i_area]} Permutation progress: {i+1}/{num_iters}')
+
+            print(f'{D.areanames[i_area]} Permutation progress: {i+1}/{D.numperms}')
 
         # Get CI
         accs_sorted = np.sort(accs_permtest, axis=1)  # Sort permutations
@@ -205,7 +211,7 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_a
 
         sigclusters[i_area] = accs_ci
 
-   
+
 class Run:
 
     def __new__(cls, function_to_run, trace_names, peak_epoch=None, peak_cond=None, train_across_conds=False, areas=range(D.numareas), maintitle='Decoder', savefolder='dec/temp', upsample=None):
@@ -248,8 +254,6 @@ class Run:
         trials_per_label = np.array(np.nanmin(dists_all[0], axis=1), dtype=int)
         trials_per_label[trials_per_label < D.dec_minsamples] = D.dec_minsamples
         trace_names = [t+f' ({n})' for t, n in zip(trace_names, trials_per_label)]
-
-        Plot.GeneralPlot(accs_all[:, 0:1], sems_all[:, 0:1], sigclusters[:, 0:1], trace_names, savefolder, ylabel, maintitle, scale_sig=False, show_sig=False)
 
         Plot.GeneralAllAreas(accs_all[:, 0:1], sems_all[:, 0:1], sigclusters[:, 0:1], trace_names, savefolder, ylabel, maintitle, scale_sig=False, show_sig=False)
 

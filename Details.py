@@ -3,6 +3,8 @@ import Details as D
 import os
 
 domultiproc = True
+dec_numiters = 20
+numperms = 20
 
 areas = ['DMStr', 'DLPFC', 'DLStr', 'ACC', 'FP']  # DMStr = caudate, DLStr = putamen
 areanames = ['Caudate', 'DLPFC', 'Putamen', 'ACC', 'FP']  # DMStr = caudate, DLStr = putamen
@@ -70,16 +72,14 @@ names_epochs = ('Fixation', 'Choice 1 on', '\nTransition Revealed', 'Choice 2 on
 numtrialepochs = len(epochs)
 
 # Permutation tests
-numperms = 30
 sigthreshold_onetailed = int(numperms * 0.05)  # .05% p-value
 sigthreshold_twotailed = int(numperms * 0.025)  # .05% p-value
 
 # Decoder
-dec_numiters = 20
 dec_test_size = 0.2
-dec_minsamples = 5
+dec_minsamples = 6
 dec_upsample = False
-dec_do_perms = True
+dec_do_perms = False
 dec_leaveoneout = False
 decoders = ('Logistic Regression', 'SVM', 'LDA')
 decoder = decoders[1]
