@@ -3,7 +3,7 @@ import Details as D
 import os
 
 domultiproc = True
-dec_numiters = 20
+dec_numiters = 3
 numperms = 20
 
 areas = ['DMStr', 'DLPFC', 'DLStr', 'ACC', 'FP']  # DMStr = caudate, DLStr = putamen

@@ -50,7 +50,7 @@ def _makeandplotavgs(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labels, sho
 
 
 # Plot single time point T-test results
-def _makeandplotavgs_sigdec(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labels, show_leg, scale_sig):
+def _makeandplotavgs_sigdec(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labels, show_leg, scale_sig, peak_epoch=None, peak_tp=None):
     # SPlit into pvals and avgs
     pvals_in = avg_in[1]
     avg_in = avg_in[0]
@@ -62,7 +62,6 @@ def _makeandplotavgs_sigdec(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labe
     avgs.fill(np.nan)
     sems = np.copy(avgs)
 
-
     for i_epoch in range(D.numtrialepochs):
         start = i_epoch * binlength
         fin = i_epoch * binlength + D.num_timepoints
@@ -73,7 +72,7 @@ def _makeandplotavgs_sigdec(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labe
             sems[i_cond, start:fin] = sems_in[i_cond, i_epoch]
 
     # Now plot the data
-    for num, (avg, sem, label, pval) in enumerate(zip(avgs, sems, leg_labels, pvals)):
+    for i_cond, (avg, sem, label, pval) in enumerate(zip(avgs, sems, leg_labels, pvals)):
 
         # Split into significant and non-significant data points
         avg_sig = np.copy(avg)
@@ -83,22 +82,40 @@ def _makeandplotavgs_sigdec(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labe
         sem[pval>0.05] = np.nan
         avg_nosig[pval<0.05] = np.nan
 
-        if show_leg:
-            ax.plot(avg_sig, label=f'{label}', color=f'C{num}', lw=3)
+        if peak_tp is None:
+            c = f'C{i_cond}'
+            lw = 3
         else:
-            ax.plot(avg_sig, color=f'C{num}', lw=3)
-        ax.plot(avg_nosig, color=f'C{num}', lw=0.75)
+            if i_cond==0:
+                c = 'gray'
+                lw=1
+            else:
+                c=f'C{i_cond-1}'
+                lw=3
 
-        ax.fill_between(range(len(avg)), avg - sem, avg + sem, alpha=0.3, color=f'C{num}')
-        ax.set_xlim(0, numpoints)
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        ax.yaxis.set_ticks_position('left')
-        ax.xaxis.set_ticks_position('bottom')
-        ax.set_ylabel(ylab, fontsize=11)
-        ax.spines['bottom'].set_visible(False)
-        ax.set_xticks([])
-        plt.yticks(fontsize=13)
+        if show_leg:
+            ax.plot(avg_sig, label=f'{label}', color=c, lw=lw)
+        else:
+            ax.plot(avg_sig, color=c, lw=lw)
+        ax.plot(avg_nosig, color=c, lw=1)
+
+        ax.fill_between(range(len(avg)), avg - sem, avg + sem, alpha=0.3, color=c)
+
+    ax.set_xlim(0, numpoints)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+    ax.set_ylabel(ylab, fontsize=11)
+    ax.spines['bottom'].set_visible(False)
+    ax.set_xticks([])
+    plt.yticks(fontsize=13)
+
+    if peak_tp is not None:
+        vline = peak_epoch * binlength + peak_tp
+        ax.axvline(vline, color='red', lw=2)
+
+
 
 # Plot permutation test results
 def _makeandplotavgs_permtest(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labels, show_leg, scale_sig):
@@ -208,7 +225,7 @@ def GeneralAllAreas(avgs, sems, sigclusters, trace_names, savefolder, ytitles, m
 
     showlegends = [True if i==0 else False for i in range(D.numareas)]
 
-    f, axes_all = plt.subplots(D.numareas, 1, figsize=(width_regplot, height_regplot*D.numareas), sharex=True)
+    f, axes_all = plt.subplots(D.numareas, 1, figsize=(width_regplot, height_regplot*D.numareas), sharex=True, sharey=True)
 
     for i_area, (avgs_area, sems_area, sig_area, axes) in enumerate(zip(avgs, sems, sigclusters, axes_all)):
         if i_area == 0:
@@ -221,17 +238,17 @@ def GeneralAllAreas(avgs, sems, sigclusters, trace_names, savefolder, ytitles, m
     U.savefig(savefolder, 'all')
 
 # Plots result from t-test at every time point comparing accuracy to 50%
-def DecoderSignificant_AllAreas(avgs, sems, sigclusters, trace_names, savefolder, ytitles, maintitle, scale_sig, show_sig=True):
+def DecoderSignificant_AllAreas(avgs, sems, sigclusters, trace_names, savefolder, maintitle, peak_epoch, peak_tp, scale_sig, show_sig=True):
 
     showlegends = [True if i==0 else False for i in range(D.numareas)]
 
-    f, axes_all = plt.subplots(D.numareas, 1, figsize=(width_regplot, height_regplot*D.numareas), sharex=True)
+    f, axes_all = plt.subplots(D.numareas, 1, figsize=(width_regplot, height_regplot*D.numareas), sharex=True, sharey=True)
 
     for i_area, (avgs_area, sems_area, sig_area, axes) in enumerate(zip(avgs, sems, sigclusters, axes_all)):
         if i_area == 0:
-            _makeandplotavgs_sigdec(avgs_area, sems_area, sig_area, axes, ylab=D.areanames[i_area], showsig=show_sig, leg_labels=trace_names, show_leg=showlegends, scale_sig=scale_sig)
+            _makeandplotavgs_sigdec(avgs_area, sems_area, sig_area, axes, ylab=D.areanames[i_area], showsig=show_sig, leg_labels=trace_names, show_leg=showlegends, scale_sig=scale_sig, peak_epoch=peak_epoch, peak_tp=peak_tp)
         else:
-            _makeandplotavgs_sigdec(avgs_area, sems_area, sig_area, axes, ylab=D.areanames[i_area], showsig=show_sig, leg_labels=trace_names, show_leg=False, scale_sig=scale_sig)
+            _makeandplotavgs_sigdec(avgs_area, sems_area, sig_area, axes, ylab=D.areanames[i_area], showsig=show_sig, leg_labels=trace_names, show_leg=False, scale_sig=scale_sig, peak_epoch=peak_epoch, peak_tp=peak_tp)
 
     _finalplotadjustments(f, maintitle)
 
@@ -242,29 +259,18 @@ def DecoderPermSig_AllAreas(avgs, sems, sigclusters, trace_names, savefolder, yt
 
     showlegends = [True if i==0 else False for i in range(D.numareas)]
 
-    f, axes_all = plt.subplots(D.numareas, 1, figsize=(width_regplot, height_regplot*D.numareas), sharex=True, sharey=True)
+    for suffix, sharey in zip(('', '2'), (False, True)):
 
-    for i_area, (avgs_area, sems_area, sig_area, axes) in enumerate(zip(avgs, sems, sigclusters, axes_all)):
-        if i_area == 0:
-            _makeandplotavgs_permtest(avgs_area, sems_area, sig_area, axes, ylab=D.areanames[i_area], showsig=show_sig, leg_labels=trace_names, show_leg=showlegends, scale_sig=scale_sig)
-        else:
-            _makeandplotavgs_permtest(avgs_area, sems_area, sig_area, axes, ylab=D.areanames[i_area], showsig=show_sig, leg_labels=trace_names, show_leg=False, scale_sig=scale_sig)
+        f, axes_all = plt.subplots(D.numareas, 1, figsize=(width_regplot, height_regplot*D.numareas), sharex=True, sharey=sharey)
 
-    _finalplotadjustments(f, maintitle)
-    U.savefig(savefolder, 'all_sig_perm')
+        for i_area, (avgs_area, sems_area, sig_area, axes) in enumerate(zip(avgs, sems, sigclusters, axes_all)):
+            if i_area == 0:
+                _makeandplotavgs_permtest(avgs_area, sems_area, sig_area, axes, ylab=D.areanames[i_area], showsig=show_sig, leg_labels=trace_names, show_leg=showlegends, scale_sig=scale_sig)
+            else:
+                _makeandplotavgs_permtest(avgs_area, sems_area, sig_area, axes, ylab=D.areanames[i_area], showsig=show_sig, leg_labels=trace_names, show_leg=False, scale_sig=scale_sig)
 
-    f, axes_all = plt.subplots(D.numareas, 1, figsize=(width_regplot, height_regplot*D.numareas), sharex=True)
-
-    for i_area, (avgs_area, sems_area, sig_area, axes) in enumerate(zip(avgs, sems, sigclusters, axes_all)):
-        if i_area == 0:
-            _makeandplotavgs_permtest(avgs_area, sems_area, sig_area, axes, ylab=D.areanames[i_area], showsig=show_sig, leg_labels=trace_names, show_leg=showlegends, scale_sig=scale_sig)
-        else:
-            _makeandplotavgs_permtest(avgs_area, sems_area, sig_area, axes, ylab=D.areanames[i_area], showsig=show_sig, leg_labels=trace_names, show_leg=False, scale_sig=scale_sig)
-
-    _finalplotadjustments(f, maintitle)
-
-    U.savefig(savefolder, 'all_sig_perm2')
-
+        _finalplotadjustments(f, maintitle)
+        U.savefig(savefolder, 'all_sig_perm'+suffix)
 
 def PlotDist(dists, savefolder):
     linestyles = ['-', '--', '-.', ':', 'steps']

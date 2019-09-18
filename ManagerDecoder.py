@@ -21,7 +21,7 @@ def removeinvalidentries(arr_in, check_arr):
     return arr_in[check_arr != -1]
 
 
-def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_all, peak_epoch, peak_cond, train_across_conds, upsample, i_area):
+def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_all, peak_epoch, peak_tp, train_across_conds, upsample, i_area):
 
     data = ImportData.EntireArea(D.areas[i_area])
     dists = Maths.nans(dists_all[i_area].shape)
@@ -30,17 +30,21 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_a
     for cell in range(data.n):
         td = data.behavdata[cell]
 
-        x_data, masks = unique_func(td)
+        x_datas, masks = unique_func(td)
+
+        # Allow users to only specify one x data
+        if np.array(x_datas).ndim == 1:
+            x_datas = [x_datas] * masks.shape[0]
 
         # Remove any -1 entries in the x values
-        masks = [removeinvalidentries(mask, x_data) for mask in masks]
-        x_data = removeinvalidentries(x_data, x_data)
+        masks = [removeinvalidentries(mask, x_data) for mask, x_data in zip(masks, x_datas)]
+        x_datas = [removeinvalidentries(x_data, x_data) for x_data in x_datas]
 
-        labels = [np.unique(x_data[mask]) for mask in masks]
+        labels = [np.unique(x_data[mask]) for mask, x_data in zip(masks, x_datas)]
         numitems = [len(label) for label in labels]
 
         # Iterate through each condition
-        for i_cond, (m_cond, label) in enumerate(zip(masks, labels)):
+        for i_cond, (m_cond, label, x_data) in enumerate(zip(masks, labels, x_datas)):
 
             # Get fewest number of trials for the different labels
             dists[i_cond, cell] = np.min([sum(x_data[m_cond] == lab) for lab in label])
@@ -90,7 +94,11 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_a
 
                 td = data.behavdata[cell]
 
-                x_data, m_conds = unique_func(td)
+                x_datas, m_conds = unique_func(td)
+
+                # Allow users to only specify one x data
+                if np.array(x_datas).ndim == 1:
+                    x_datas = [x_datas] * m_conds.shape[0]
 
                 # For each epoch
                 for i_epoch, epoch in enumerate(D.epochs):
@@ -98,7 +106,7 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_a
                     y = data.generatenormalisedepoch(cell, epoch)
 
                     # For each condition get the data
-                    for i_cond, (m_cond, min_trials, valid_cell) in enumerate(zip(m_conds, trials_per_label, cell_validity)):
+                    for i_cond, (m_cond, x_data, min_trials, valid_cell) in enumerate(zip(m_conds, x_datas, trials_per_label, cell_validity)):
 
                         # Skip cells without enough trials for a certain condition
                         if not valid_cell:
@@ -129,7 +137,7 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_a
                             x_all[i_epoch, i_cond, cell, min_trials * (i_x):min_trials * (i_x + 1)] = i_x
 
             # Now we have all our data with equal number of samples for each label and each cell, we can run the decoder
-            scores = Maths.decode_across_epochs(x_all, y_all, peak_epoch, peak_cond, train_across_conds, permtest)
+            scores = Maths.decode_across_epochs(x_all, y_all, peak_epoch, peak_tp, train_across_conds, permtest)
 
             accs_perms[:, :, :, i_cellselection] = scores
 
@@ -139,53 +147,14 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_a
 
     accs_allperms = run_decoder(False)
 
+    # Get average and SEM
     accs_out[i_area, 0] = np.mean(accs_allperms, axis=3)
-
-    null_dist = Maths.calc_sig_length_null_dist()
-
-    # Also do t-test at every time point
-    for i_cond in range(num_conds):
-
-        for i_epoch in range(D.numtrialepochs):
-
-            pvals = np.empty(D.num_timepoints)
-
-            for i_ti in range(D.num_timepoints):
-                pvals[i_ti] = Maths.ttest_1samp(accs_allperms[i_cond, i_epoch, i_ti], 1/num_labels)
-
-            # Swap NaNs to 1's
-            pvals[np.isnan(pvals)] = 1
-
-            # See which runs are significantly long
-            sigcluster = np.zeros(D.num_timepoints)
-
-            pvals_bool = pvals < 0.05
-
-            for i in range(D.num_timepoints):
-
-                onecluster, clusterlength = Maths.findlongestrun(pvals_bool)
-
-                if sum(null_dist > clusterlength) > D.sigthreshold_onetailed or clusterlength < 1:
-
-                    # If no significance then stop looking
-                    break
-
-                else:
-
-                    # Significant, so add it to marker
-                    sigcluster += onecluster
-
-                    # Erase points that gave significance (set different conds to same value so they are not sig. anymore)
-                    pvals_bool[sigcluster == 1] = 1
-
-            pvals[~np.array(sigcluster, dtype=bool)] = 1
-
-            accs_out[i_area, 1, i_cond, i_epoch] = pvals
-
     std = np.nanstd(accs_allperms, axis=3)
     sem = std / np.sqrt(D.dec_numiters)
-
     sems_out[i_area, 0] = sem
+
+    # T-test at every time point
+    accs_out[i_area, 1] = Maths.ttest_every_timepoint(accs_allperms, num_labels)
 
     print(f'{D.areanames[i_area]} Finished decoding')
 
@@ -214,13 +183,16 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_a
 
 class Run:
 
-    def __new__(cls, function_to_run, trace_names, peak_epoch=None, peak_cond=None, train_across_conds=False, areas=range(D.numareas), maintitle='Decoder', savefolder='dec/temp', upsample=None):
+    def __new__(cls, function_to_run, trace_names, peak_epoch=None, peak_tp=None, train_across_conds=False, areas=range(D.numareas), maintitle='Decoder', savefolder='dec/temp', upsample=None):
 
         if upsample is None:
             upsample = D.dec_upsample
 
         timer = TimeFunction.Timer()
         num_conds = len(trace_names)
+        if peak_epoch is not None:
+            num_conds += 1
+            trace_names.insert(0, 'Train data')
         accs_all, sems_all, _ = Utils.getarrs(num_conds, 2)
         sigclusters = np.empty((D.numareas, num_conds))
         dists_all = np.zeros((D.numareas, num_conds, 300))
@@ -236,7 +208,7 @@ class Run:
             dists_all = m.np_zeros(dists_all.shape)
 
             pool = Pool(5)
-            func = partial(analysearea, function_to_run, num_conds, accs_all, sems_all, sigclusters, dists_all, peak_epoch, peak_cond, train_across_conds, upsample)
+            func = partial(analysearea, function_to_run, num_conds, accs_all, sems_all, sigclusters, dists_all, peak_epoch, peak_tp, train_across_conds, upsample)
             pool.map(func, areas)
             pool.close()
 
@@ -247,7 +219,7 @@ class Run:
             dists_all = np.zeros((D.numareas, num_conds, 300))
 
             for i_area in areas:
-                analysearea(function_to_run, num_conds, accs_all, sems_all, sigclusters, dists_all, peak_epoch, peak_cond, train_across_conds, upsample, i_area)
+                analysearea(function_to_run, num_conds, accs_all, sems_all, sigclusters, dists_all, peak_epoch, peak_tp, train_across_conds, upsample, i_area)
 
         # Plot details
         ylabel = 'Accuracy (%)'
@@ -257,7 +229,8 @@ class Run:
 
         Plot.GeneralAllAreas(accs_all[:, 0:1], sems_all[:, 0:1], sigclusters[:, 0:1], trace_names, savefolder, ylabel, maintitle, scale_sig=False, show_sig=False)
 
-        Plot.DecoderSignificant_AllAreas(accs_all, sems_all, sigclusters, trace_names, savefolder, ylabel, maintitle, scale_sig=False, show_sig=False)
+        Plot.DecoderSignificant_AllAreas(accs_all, sems_all, sigclusters, trace_names, savefolder, maintitle, peak_epoch=peak_epoch, peak_tp=peak_tp, scale_sig=False, show_sig=False)
+
 
         if D.dec_do_perms:
             Plot.DecoderPermSig_AllAreas(accs_all, sems_all, sigclusters, trace_names, savefolder, ylabel, maintitle, scale_sig=False, show_sig=True)

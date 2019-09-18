@@ -269,7 +269,7 @@ def normalisedata(arr):
     return arr
 
 
-def decode_across_epochs(x, y, peak_epoch=None, peak_cond=None, train_across_conds=False, permtest=False):
+def decode_across_epochs(x, y, peak_epoch=None, peak_tp=None, train_across_conds=False, permtest=False):
 
     if permtest:
         n_epochs = 1
@@ -293,21 +293,19 @@ def decode_across_epochs(x, y, peak_epoch=None, peak_cond=None, train_across_con
 
     # If they specified a peak_epoch, then train on this epoch and test on all others
     if peak_epoch is not None:
-
-        accuracies[peak_cond, peak_epoch], dec_to_test = decode_epoch_traintestsplit(x, y, peak_epoch, peak_cond, n_timepoints)
+        cond_to_train = 0
+        _, dec_to_test = decode_epoch_traintestsplit(x, y, peak_epoch, cond_to_train, n_timepoints, peak_tp=peak_tp)
 
 
     for epoch in range(n_epochs):
 
         for cond in range(numconds):
 
-            if epoch==peak_epoch and cond == peak_cond and not train_across_conds:
+            if peak_epoch is not None and cond > 0:
 
-                continue
+                accuracies[cond, epoch], _ = decode_epoch_traintestsplit(x, y, epoch, cond, n_timepoints, dec_in=dec_to_test)
 
-            if peak_epoch is None:
-
-                # Point to point decoding
+            else:
 
                 if D.dec_leaveoneout:
 
@@ -317,9 +315,6 @@ def decode_across_epochs(x, y, peak_epoch=None, peak_cond=None, train_across_con
 
                     accuracies[cond, epoch], _ = decode_epoch_traintestsplit(x, y, epoch, cond, n_timepoints)
 
-            else:
-
-                accuracies[cond, epoch], _ = decode_epoch_traintestsplit(x, y, epoch, cond, n_timepoints, dec_in=dec_to_test)
 
     return accuracies
 
@@ -327,9 +322,10 @@ def decode_across_epochs(x, y, peak_epoch=None, peak_cond=None, train_across_con
 # Decode all timepoints of a single epoch
 # If no decoder is provided, then it splits data into train test split and creates one
 # Returns accuracies for each time point, and the best decoder
-def decode_epoch_traintestsplit(x, y, epoch, cond, n_timepoints, dec_in=None):
+def decode_epoch_traintestsplit(x, y, epoch, cond, n_timepoints, dec_in=None, peak_tp=None):
 
     accs = np.zeros(n_timepoints)
+    decs = []
 
     for ti in range(n_timepoints):
         y_arr = y[epoch, cond, :, :, ti]  # y by trials
@@ -362,7 +358,11 @@ def decode_epoch_traintestsplit(x, y, epoch, cond, n_timepoints, dec_in=None):
         if score > np.max(accs) or ti == 0:
             best_dec = dec
 
+        decs.append(dec)
         accs[ti] = score
+
+    if peak_tp is not None:
+        best_dec = decs[peak_tp]
 
     return accs, best_dec
 
@@ -540,3 +540,50 @@ def calc_sig_length_null_dist():
 
     return dist_sorted
 
+
+def ttest_every_timepoint(accs_allperms, num_labels):
+    null_dist = calc_sig_length_null_dist()
+    num_conds = accs_allperms.shape[0]
+
+    out = np.empty((num_conds, D.numtrialepochs, D.num_timepoints))
+
+    # Also do t-test at every time point
+    for i_cond in range(num_conds):
+
+        for i_epoch in range(D.numtrialepochs):
+
+            pvals = np.empty(D.num_timepoints)
+
+            for i_ti in range(D.num_timepoints):
+                pvals[i_ti] = ttest_1samp(accs_allperms[i_cond, i_epoch, i_ti], 1 / num_labels)
+
+            # Swap NaNs to 1's
+            pvals[np.isnan(pvals)] = 1
+
+            # See which runs are significantly long
+            sigcluster = np.zeros(D.num_timepoints)
+
+            pvals_bool = pvals < 0.05
+
+            for i in range(D.num_timepoints):
+
+                onecluster, clusterlength = findlongestrun(pvals_bool)
+
+                if sum(null_dist > clusterlength) > D.sigthreshold_onetailed or clusterlength < 1:
+
+                    # If no significance then stop looking
+                    break
+
+                else:
+
+                    # Significant, so add it to marker
+                    sigcluster += onecluster
+
+                    # Erase points that gave significance (set different conds to same value so they are not sig. anymore)
+                    pvals_bool[sigcluster == 1] = 1
+
+            pvals[~np.array(sigcluster, dtype=bool)] = 1
+
+            out[i_cond, i_epoch] = pvals
+
+    return out
