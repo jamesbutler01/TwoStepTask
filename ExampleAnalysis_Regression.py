@@ -28,7 +28,7 @@ def analysecell(counter, output_betas, data, cell):
     for i_epoch, epoch in enumerate(D.epochs):
 
         # Load the y (cell firing rate) for that epoch
-        y = data.generatenormalisedepoch(cell, epoch)
+        y = data.generate_epoch_norm(cell, epoch)
 
         # Loop through each condition
         for i_cond, cond in enumerate(conds):

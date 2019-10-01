@@ -34,7 +34,7 @@ def analysecell(counter, output_frs, data, cell):
     for i_epoch, epoch in enumerate(D.epochs):
 
         # Load the y (cell firing rate) for that epoch
-        y = data.generatenormalisedepoch(cell, epoch)
+        y = data.generate_epoch_norm(cell, epoch)
 
         # Loop through each condition
         for i_cond, cond in enumerate(conds):
@@ -56,4 +56,4 @@ if __name__ == "__main__":
     num_conds = len(trace_names)
     num_rows = 1
     plotfunc = Plot.GeneralPlot
-    ManagerAnalysis.Run(analysecell, True, num_conds, num_rows, maintitle, ytitles, savefolder, trace_names, plotfunc)
+    ManagerAnalysis.Run(analysecell, False, num_conds, num_rows, maintitle, ytitles, savefolder, trace_names, plotfunc)

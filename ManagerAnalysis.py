@@ -2,6 +2,8 @@ import ImportData
 import Details as D
 import numpy as np
 import multiprocessing.managers
+from multiprocessing import Process, Pool
+from functools import partial
 import Maths
 import TimeFunction
 import Utils
@@ -23,22 +25,23 @@ class Run:
         all_avgs, all_sem, sigclusters = Utils.getarrs(num_conds, num_rows)
 
         for i_area, area in enumerate(D.areas):
+
             data = ImportData.EntireArea(area)
 
-            counter = m.np_zeros(data.n)
-            counter = np.zeros(data.n)
-            betas = m.np_zeros((num_rows, num_conds, D.numtrialepochs, data.n, D.num_timepoints))
-            betas = np.zeros((num_rows, num_conds, D.numtrialepochs, data.n, D.num_timepoints))
-
-            for i in range(data.n):
-                function_to_run(counter, betas, data, i)
-            #pool = Pool(5)
-            #func = partial(function_to_run, counter, betas, data)
-            #run_list = range(data.n)
-            #pool.map(func, run_list)
-            #pool.close()
-
-            betas = np.array(betas)
+            if D.domultiproc:
+                counter = m.np_zeros(data.n)
+                betas = m.np_zeros((num_rows, num_conds, D.numtrialepochs, data.n, D.n_timepoints))
+                pool = Pool(D.n_cores)
+                func = partial(function_to_run, counter, betas, data)
+                run_list = range(data.n)
+                pool.map(func, run_list)
+                pool.close()
+                betas = np.array(betas)
+            else:
+                counter = np.zeros(data.n)
+                betas = np.zeros((num_rows, num_conds, D.numtrialepochs, data.n, D.n_timepoints))
+                for i in range(data.n):
+                    function_to_run(counter, betas, data, i)
 
             for i_row, row_epoch in enumerate(betas):
                 for i_choice, cond_epoch in enumerate(row_epoch):  # Now trialepochs x cell x timepoints

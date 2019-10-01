@@ -6,6 +6,43 @@ import Details as D
 from pathlib import Path
 
 
+class EntireSession:
+    def __init__(self, EntireAreas, session):
+        self.EntireAreas = EntireAreas
+        self.cells_indexes = [a.cells_index.unique_sess_index for a in EntireAreas]
+        self.inc_cells = [np.where(np.array(index)==session)[0] for index in self.cells_indexes]
+        self.cells_per_area = [len(i) for i in self.inc_cells]
+        self.n = sum(self.cells_per_area)
+        self.cum_cells = np.cumsum(self.cells_per_area)
+
+        self.behavdata = []
+        for i_cell in range(self.n):
+            i_area, actual_cell = self.convert_sess_id_to_cell_and_area_id(i_cell)
+            self.behavdata.append(EntireAreas[i_area].behavdata[actual_cell])
+
+
+    def convert_sess_id_to_cell_and_area_id(self, cell):
+        # First figure out which area
+        i_area = len(np.where(self.cum_cells <= cell)[0])
+
+        # Now figure out offset for cell
+        cell_offset = 0
+        if i_area != 0:
+            cell_offset += self.cum_cells[i_area - 1]
+        cell -= cell_offset
+
+        actual_cell = self.inc_cells[i_area][cell]
+
+        return i_area, actual_cell
+
+
+    def generate_epoch_norm(self, cell, epoch):
+        i_area, actual_cell = self.convert_sess_id_to_cell_and_area_id(cell)
+        return self.EntireAreas[i_area].generate_epoch_norm(actual_cell, epoch)
+
+
+
+
 class EntireArea:
     def __init__(self, area):
         self.area = area
@@ -18,18 +55,18 @@ class EntireArea:
         for i in range(self.n):
             self.behavdata.append(GetBehavInfoForCell(struct, self.cells_index, i))
 
-    def generatenormalisedepoch(self, cell, epoch):
+    def generate_epoch_norm(self, cell, epoch):
         savepath = f'{self.savefolder}norm/{self.area}_{cell}_{epoch}.npy'
         savedfile = Path(savepath)
         if savedfile.is_file():
-            return np.load(savedfile)
+            raw = np.load(savedfile)
         else:
-            fix = self.generateaverageepoch(cell, D.sc_madefixation)
+            fix = self.generate_epoch_raw(cell, D.sc_madefixation)
             fixstart = D.converttimetosmoothedtrace(50)  # ms after fix made
             fixstop = D.converttimetosmoothedtrace(400)
             fix = fix[:, fixstart:fixstop]
 
-            raw = self.generateaverageepoch(cell, epoch)
+            raw = self.generate_epoch_raw(cell, epoch)
             raw -= np.mean(fix)
             raw /= np.std(fix)
 
@@ -41,9 +78,20 @@ class EntireArea:
 
             np.save(savepath, raw)
 
-            return raw
+        # Clip raw to suggested boundaries
+        if D.smooth_prewindow > D.static_prewindow or D.smooth_postwindow > D.static_postwindow:
+            raise Exception('Need to generate static rasters of sufficient length before you can clip them to the size specified')
 
-    def generateaverageepoch(self, cell, epoch):
+        if D.static_prewindow == D.smooth_prewindow:
+            start = 0  # Avoid divide by 0
+        else:
+            start = (D.static_prewindow - D.smooth_prewindow) // D.smooth_step
+
+        raw_clipped = raw[:, start:start+D.smooth_outputlength]
+
+        return raw_clipped
+
+    def generate_epoch_raw(self, cell, epoch):
         savepath = f'{self.savefolder}{self.area}_{cell}_{epoch}.npy'
         savedfile = Path(savepath)
         if savedfile.is_file():
@@ -88,6 +136,8 @@ class EntireArea:
                         times_buffer = []
                         strobe_buffer = []
                     elif code == 18:
+                        strobe_buffer.append(code)
+                        times_buffer.append(time)
                         if trial_counter in self.behavdata[cell].validtrials:  # Skip invalid trials
                             strobe_codes_list.append(np.array(strobe_buffer))
                             strobe_times_list.append(np.array(times_buffer))
@@ -100,8 +150,12 @@ class EntireArea:
 
                 return out
 
+            print(f'Generating raster for {self.area} cell {cell}')
             spikes = loadspikes()
+            print(f'Spikes loaded for {self.area} cell {cell}')
+
             strobes = loadstrobesbytrials()
+            print(f'Strobes loaded for {self.area} cell {cell}')
 
             # So want to make one smoothed trace per trial stacked in a matrix
             def makesmoothedtrace(spikes, timepoint):
@@ -124,6 +178,7 @@ class EntireArea:
                     trace = makesmoothedtrace(spikes, timepoint)
                     alltraces.append(trace)
             alltraces = np.array(alltraces)
+            print(f'Traces loaded for {self.area} cell {cell}')
 
             # Make the save folder if it doesn't exist
             import os
@@ -158,8 +213,12 @@ class GetBehavInfoForCell:
         self.trialtype = np.array(struct[subj][0][sess][0][D.ind_trialtype].flatten(), dtype=int)
         self.transition = np.array(struct[subj][0][sess][0][D.ind_transition].flatten(), dtype=int)
         self.c1dir = np.array(struct[subj][0][sess][0][D.ind_sidechosen1].flatten(), dtype=int)
+        self.c1dirs = np.array(struct[subj][0][sess][0][D.ind_dirsgiven_c1].reshape((len(self.c1dir), 2)), dtype=int)
         self.c2dir = np.array(struct[subj][0][sess][0][D.ind_sidechosen2].flatten(), dtype=int)
+        self.c2dirs = np.array(struct[subj][0][sess][0][D.ind_dirsgiven_c2].reshape((len(self.c2dir), 2)), dtype=int)
         self.choice1 = np.array(struct[subj][0][sess][0][D.ind_picchosen1].flatten(), dtype=int)
+        self.rt_c1 = np.array(struct[subj][0][sess][0][D.ind_rt_c1].flatten(), dtype=int)
+        self.rt_c2 = np.array(struct[subj][0][sess][0][D.ind_rt_c2].flatten(), dtype=int)
         self.c1chosen = self.choice1
         self.c1given = np.empty(self.c1chosen.shape, dtype=int)
         for i_c1, (c1, trans) in enumerate(zip(self.c1chosen, self.transition)):

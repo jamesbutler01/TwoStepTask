@@ -124,7 +124,7 @@ def permtest(arr, multiproc=True):
         if multiproc:
 
             dist = m.np_zeros(D.numperms)
-            pool = Pool(5)
+            pool = Pool(D.n_cores)
             func = partial(doperms, epoch_buff, dist)
             run_list = range(D.numperms)
             pool.map(func, run_list)
@@ -275,8 +275,8 @@ def decode_across_epochs(x, y, peak_epoch=None, peak_tp=None, train_across_conds
         n_epochs = 1
         n_timepoints = 1
     else:
-        n_epochs = D.numtrialepochs
-        n_timepoints = D.num_timepoints
+        n_epochs = y.shape[0]
+        n_timepoints = D.n_timepoints
 
     numconds = y.shape[1]
     accuracies = np.empty((numconds, n_epochs, n_timepoints))
@@ -290,9 +290,9 @@ def decode_across_epochs(x, y, peak_epoch=None, peak_tp=None, train_across_conds
 
         return accuracies
 
-
     # If they specified a peak_epoch, then train on this epoch and test on all others
     if peak_epoch is not None:
+
         cond_to_train = 0
         _, dec_to_test = decode_epoch_traintestsplit(x, y, peak_epoch, cond_to_train, n_timepoints, peak_tp=peak_tp)
 
@@ -319,17 +319,99 @@ def decode_across_epochs(x, y, peak_epoch=None, peak_tp=None, train_across_conds
     return accuracies
 
 
+# For each timepoint, train a decoder and then test decoder on all other time points
+# Returns 2D matrix of decoder at all time points
+def decode_stability(x, y):
+
+    n_epochs = y.shape[0]
+    n_timepoints = D.n_timepoints
+    cond = 0
+    n_pnts = n_epochs * (n_timepoints+1)
+    accuracies = nans((n_pnts, n_pnts))
+
+    if x.shape[1] == 1:
+        # If testing within condition, then choose indices for train test split
+        samples_per_label = x.shape[-1]
+        num_test_samples = int(samples_per_label * D.dec_test_size)
+
+        if num_test_samples == 0 or num_test_samples == samples_per_label:
+            raise Exception('Not enough data to split into train and test')
+
+        test_inds = np.random.choice(samples_per_label, num_test_samples, replace=False)
+        train_mask = np.ones(samples_per_label, dtype=bool)
+        train_mask[test_inds] = False
+        train_inds = np.arange(samples_per_label)[train_mask]
+
+        x_test, x_train = x[:, :, :, :, test_inds], x[:, :, :, :, train_inds]
+        y_test, y_train = y[:, :, :, :, test_inds], y[:, :, :, :, train_inds]
+
+    else:
+        # Otherwise the 2 conditions are our train and test data
+        x_test, x_train = x[:, :1,], x[:, 1:]
+        y_test, y_train = y[:, :1], y[:, 1:]
+
+    for epoch in range(n_epochs):
+
+        # Get a decoder for each time point
+        _, decs_across_timepoints = decode_epoch_stability(x_train, y_train, epoch, cond)
+
+        for i_dec, dec in enumerate(decs_across_timepoints):
+
+            # Now test these decoders on all time points
+            for test_epoch in range(n_epochs):
+
+                i_start = test_epoch * (n_timepoints+1)
+                i_stop = i_start + n_timepoints
+
+                accuracies[i_dec + (epoch * (n_timepoints+1)), i_start:i_stop], _ = decode_epoch_stability(x_test, y_test, test_epoch, cond, dec_in=dec)
+
+    return accuracies
+
+
+def decode_epoch_stability(x, y, epoch, cond, dec_in=None):
+
+    n_timepoints = y.shape[-1]
+    accs = np.zeros(n_timepoints)
+    decs = []
+
+    for ti in range(n_timepoints):
+        y_arr = y[epoch, cond, :, :, :, ti]  # y by trials
+        x_arr = x[epoch, cond, :, :, :]  # x by trials
+
+        # Collapse across labels
+        y_arr = y_arr.reshape((y_arr.shape[0], y_arr.shape[1] * y_arr.shape[2])).T
+        x_arr = x_arr.reshape((x_arr.shape[0], x_arr.shape[1] * x_arr.shape[2])).T
+
+        if dec_in == None:
+
+            # If no decoder provided we need to train one
+            dec = create_and_train_decoder(x_arr, y_arr)
+            decs.append(dec)
+
+        else:
+
+            # Decoder provided so test it on all samples
+            score = test_decoder(dec_in, x_arr, y_arr)
+            accs[ti] = score
+
+    return accs, decs
+
+
+
 # Decode all timepoints of a single epoch
 # If no decoder is provided, then it splits data into train test split and creates one
 # Returns accuracies for each time point, and the best decoder
-def decode_epoch_traintestsplit(x, y, epoch, cond, n_timepoints, dec_in=None, peak_tp=None):
+def decode_epoch_traintestsplit(x, y, epoch, cond, n_timepoints, dec_in=None, peak_tp=None, return_all_decs=False):
 
     accs = np.zeros(n_timepoints)
     decs = []
 
     for ti in range(n_timepoints):
-        y_arr = y[epoch, cond, :, :, ti]  # y by trials
-        x_arr = x[epoch, cond, :, :]  # x by trials
+        y_arr = y[epoch, cond, :, :, :, ti]  # y by trials
+        x_arr = x[epoch, cond, :, :, :]  # x by trials
+
+        y_arr = np.reshape(y_arr, (y_arr.shape[0], y_arr.shape[1] * y_arr.shape[2]))
+        x_arr = np.reshape(x_arr, (x_arr.shape[0], x_arr.shape[1] * x_arr.shape[2]))
 
         # Filter out NaNs across both dimensions
         if np.isnan(x_arr).any():
@@ -363,6 +445,9 @@ def decode_epoch_traintestsplit(x, y, epoch, cond, n_timepoints, dec_in=None, pe
 
     if peak_tp is not None:
         best_dec = decs[peak_tp]
+
+    if return_all_decs:
+        best_dec = decs
 
     return accs, best_dec
 
@@ -424,6 +509,9 @@ def decode_epoch_leaveoneout(x, y, epoch, cond, n_timepoints):
         y_arr = y[epoch, cond, :, :, ti]  # y by trials
         x_arr = x[epoch, cond, :, :]  # x by trials
 
+        y_arr = np.reshape(y_arr, (y_arr.shape[0], y_arr.shape[1] * y_arr.shape[2]))
+        x_arr = np.reshape(x_arr, (x_arr.shape[0], x_arr.shape[1] * x_arr.shape[2]))
+
         # Filter out NaNs across both dimensions
         if np.isnan(x_arr).any():
             # First remove trials without entries (trailing nans)
@@ -470,6 +558,60 @@ def decode_epoch_leaveoneout(x, y, epoch, cond, n_timepoints):
     return accs, best_dec
 
 
+
+# Works out the the minimum number of samples across all cells
+def calculate_min_trials_per_area(data, unique_func, dists_all, i_area):
+    dists = nans(dists_all[i_area].shape)
+
+    for cell in range(data.n):
+        td = data.behavdata[cell]
+
+        x_datas, masks = unique_func(td)
+
+        # Allow users to only specify one x data
+        if np.array(x_datas).ndim == 1:
+            x_datas = [x_datas] * masks.shape[0]
+
+        # Remove any -1 entries in the x values
+        masks = [dec_removeinvalidentries(mask, x_data) for mask, x_data in zip(masks, x_datas)]
+        x_datas = [dec_removeinvalidentries(x_data, x_data) for x_data in x_datas]
+
+        labels = [np.unique(x_data[mask]) for mask, x_data in zip(masks, x_datas)]
+        numitems = [len(label) for label in labels]
+
+        # Iterate through each condition
+        for i_cond, (m_cond, label, x_data) in enumerate(zip(masks, labels, x_datas)):
+            # Get fewest number of trials for the different labels
+            dists[i_cond, cell] = np.min([sum(x_data[m_cond] == lab) for lab in label])
+
+    min_trials_per_label = np.array(np.nanmin(dists, axis=1), dtype=int)
+    original_trials_per_label = np.copy(min_trials_per_label)
+
+    # Any without enough trials will be excluded
+    min_trials_per_label[min_trials_per_label < D.dec_minsamples] = D.dec_minsamples
+
+    # Only allow cells with enough trials per label
+    validcells = dists.T[:data.n] >= D.dec_minsamples
+
+    # Correct min trials per label to all be the same
+    min_trials_per_label[min_trials_per_label != np.min(min_trials_per_label)] = np.min(min_trials_per_label)
+
+    # Redo mask to make sure same cells are excluded from every analysis
+    new_valid_cells = np.nanmin(dists.T[:data.n], axis=1) >= min_trials_per_label[0]
+    for i in range(len(validcells.T)):
+        validcells[:, i] = new_valid_cells[:len(validcells)]
+
+    max_across_conds = np.max(min_trials_per_label)
+    num_labels = len(label)
+    num_samples_per_label = min_trials_per_label[0]
+
+    # Now we know the maximum of trials to use with the decoder
+    print(
+        f'{i_area} has {original_trials_per_label} min trials per condition, {int(np.mean(validcells) * 100)}% cells included ({sum(validcells)})')
+
+    return num_labels, num_samples_per_label, validcells, dists
+
+
 def create_and_train_decoder(x, y):
 
     if D.decoder == 'Logistic Regression':
@@ -477,7 +619,7 @@ def create_and_train_decoder(x, y):
     elif D.decoder == 'LDA':
         decode_inst = LinearDiscriminantAnalysis()
     elif D.decoder == 'SVM':
-        decode_inst = svm.SVC()
+        decode_inst = svm.SVC(probability=D.dec_allow_probs)
 
     decode_inst.fit(y, x[:, 0])
 
@@ -529,7 +671,7 @@ def calc_sig_length_null_dist():
 
     # See how often you get runs of significance in each epoch
     dist = []
-    n = D.num_timepoints
+    n = D.n_timepoints
     for i in range(D.numperms):
         bin = np.zeros(n)
         ind_inc_trials = np.random.choice(n, int(n * 0.05), replace=False)
@@ -544,28 +686,29 @@ def calc_sig_length_null_dist():
 def ttest_every_timepoint(accs_allperms, num_labels):
     null_dist = calc_sig_length_null_dist()
     num_conds = accs_allperms.shape[0]
+    n_epochs = accs_allperms.shape[1]
 
-    out = np.empty((num_conds, D.numtrialepochs, D.num_timepoints))
+    out = np.empty((num_conds, n_epochs, D.n_timepoints))
 
     # Also do t-test at every time point
     for i_cond in range(num_conds):
 
-        for i_epoch in range(D.numtrialepochs):
+        for i_epoch in range(n_epochs):
 
-            pvals = np.empty(D.num_timepoints)
+            pvals = np.empty(D.n_timepoints)
 
-            for i_ti in range(D.num_timepoints):
+            for i_ti in range(D.n_timepoints):
                 pvals[i_ti] = ttest_1samp(accs_allperms[i_cond, i_epoch, i_ti], 1 / num_labels)
 
             # Swap NaNs to 1's
             pvals[np.isnan(pvals)] = 1
 
             # See which runs are significantly long
-            sigcluster = np.zeros(D.num_timepoints)
+            sigcluster = np.zeros(D.n_timepoints)
 
             pvals_bool = pvals < 0.05
 
-            for i in range(D.num_timepoints):
+            for i in range(D.n_timepoints):
 
                 onecluster, clusterlength = findlongestrun(pvals_bool)
 
@@ -587,3 +730,7 @@ def ttest_every_timepoint(accs_allperms, num_labels):
             out[i_cond, i_epoch] = pvals
 
     return out
+
+
+def dec_removeinvalidentries(arr_in, check_arr):
+    return arr_in[check_arr != -1]

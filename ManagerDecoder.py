@@ -17,77 +17,26 @@ class MyManager(multiprocessing.managers.BaseManager):
 MyManager.register('np_zeros', np.zeros, multiprocessing.managers.ArrayProxy)
 
 
-def removeinvalidentries(arr_in, check_arr):
-    return arr_in[check_arr != -1]
-
-
-def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_all, peak_epoch, peak_tp, train_across_conds, upsample, i_area):
+def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_all, epochs, stability, peak_epoch, peak_tp, train_across_conds, train_epochs, i_area):
 
     data = ImportData.EntireArea(D.areas[i_area])
-    dists = Maths.nans(dists_all[i_area].shape)
+    n_epochs = len(epochs)
 
-    # First we need to work out what the minimum number of samples across all cells
-    for cell in range(data.n):
-        td = data.behavdata[cell]
-
-        x_datas, masks = unique_func(td)
-
-        # Allow users to only specify one x data
-        if np.array(x_datas).ndim == 1:
-            x_datas = [x_datas] * masks.shape[0]
-
-        # Remove any -1 entries in the x values
-        masks = [removeinvalidentries(mask, x_data) for mask, x_data in zip(masks, x_datas)]
-        x_datas = [removeinvalidentries(x_data, x_data) for x_data in x_datas]
-
-        labels = [np.unique(x_data[mask]) for mask, x_data in zip(masks, x_datas)]
-        numitems = [len(label) for label in labels]
-
-        # Iterate through each condition
-        for i_cond, (m_cond, label, x_data) in enumerate(zip(masks, labels, x_datas)):
-
-            # Get fewest number of trials for the different labels
-            dists[i_cond, cell] = np.min([sum(x_data[m_cond] == lab) for lab in label])
-
-    dists_all[i_area] = dists
-    trials_per_label = np.array(np.nanmin(dists, axis=1), dtype=int)
-    original_trials_per_label = np.copy(trials_per_label)
-
-    # Any without enough trials will be excluded
-    trials_per_label[trials_per_label < D.dec_minsamples] = D.dec_minsamples
-
-    # Only allow cells with enough trials per label
-    validcells = dists.T[:data.n] >= D.dec_minsamples
-
-    # Need same amount of trials for each cond in this case
-    if train_across_conds or True:
-
-        # Correct min trials per label to all be the same
-        trials_per_label[trials_per_label != np.min(trials_per_label)] = np.min(trials_per_label)
-
-        # Redo mask to make sure same cells are excluded from every analysis
-        new_valid_cells = np.nanmin(dists.T[:data.n], axis=1) > trials_per_label[0]
-        for i in range(len(validcells.T)):
-            validcells[:, i] = new_valid_cells[:len(validcells)]
-
-    max_across_conds = np.max(trials_per_label)
-
-    num_labels = len(label)
-
-    # Now we know the maximum of trials to use with the decoder
-    print(f'{D.areanames[i_area]} has {original_trials_per_label} min trials per condition, {int(np.mean(validcells)*100)}% cells included ({sum(validcells)})')
+    num_labels, num_samples_per_label, validcells, dists_all[i_area] = Maths.calculate_min_trials_per_area(data, unique_func, dists_all, i_area)
 
     def run_decoder(permtest=False):
 
-        # Make holding arrays for analysis
-        accs_perms = np.empty((num_conds, D.numtrialepochs, D.num_timepoints, D.dec_numiters))
+        # # Make holding arrays for analysis
+        if not stability:
+            accs_perms = np.empty((num_conds, n_epochs, D.n_timepoints, D.dec_numiters))
+        else:
+            n_pnts = n_epochs * (D.n_timepoints + 1)
+            accs_perms = Maths.nans((n_pnts, n_pnts, D.dec_numiters))
 
         for i_cellselection in range(D.dec_numiters):
 
-            y_all = np.empty((D.numtrialepochs, num_conds, data.n, max_across_conds * np.max(numitems), D.num_timepoints))
-            x_all = np.empty((D.numtrialepochs, num_conds, data.n, max_across_conds * np.max(numitems)))
-            y_all.fill(np.nan)
-            x_all.fill(np.nan)
+            y_all = Maths.nans((n_epochs, num_conds, data.n, num_labels, num_samples_per_label, D.n_timepoints))
+            x_all = Maths.nans((n_epochs, num_conds, data.n, num_labels, num_samples_per_label))
 
             # Loop to collect all the data from the different cells that had enough trials
             for cell, cell_validity in enumerate(validcells):
@@ -101,12 +50,16 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_a
                     x_datas = [x_datas] * m_conds.shape[0]
 
                 # For each epoch
-                for i_epoch, epoch in enumerate(D.epochs):
-
-                    y = data.generatenormalisedepoch(cell, epoch)
+                for i_epoch, epoch in enumerate(epochs):
 
                     # For each condition get the data
-                    for i_cond, (m_cond, x_data, min_trials, valid_cell) in enumerate(zip(m_conds, x_datas, trials_per_label, cell_validity)):
+                    for i_cond, (m_cond, x_data, valid_cell) in enumerate(zip(m_conds, x_datas, cell_validity)):
+
+                        # If we're training across epochs, then use training epoch
+                        if stability and num_conds == 2 and i_cond == 0:
+                            y = data.generate_epoch_norm(cell, train_epochs[i_epoch])
+                        else:
+                            y = data.generate_epoch_norm(cell, epoch)
 
                         # Skip cells without enough trials for a certain condition
                         if not valid_cell:
@@ -116,8 +69,8 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_a
                         x_masked = x_data[m_cond]
 
                         # Remove any potential -1's in the x data
-                        y_masked = removeinvalidentries(y_masked, x_masked)
-                        x_masked = removeinvalidentries(x_masked, x_masked)
+                        y_masked = Maths.dec_removeinvalidentries(y_masked, x_masked)
+                        x_masked = Maths.dec_removeinvalidentries(x_masked, x_masked)
 
                         # Shuffle
                         if permtest:
@@ -130,72 +83,97 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_a
                             y_for_xval = y_masked[x_masked == x_val]
 
                             # Choose random subset of y data
-                            ind_inc_trials = np.random.choice(len(y_for_xval), min_trials, replace=False)
+                            ind_inc_trials = np.random.choice(len(y_for_xval), num_samples_per_label, replace=False)
 
                             # Store x and y data in holding arrays
-                            y_all[i_epoch, i_cond, cell, min_trials * (i_x):min_trials * (i_x + 1), :] = y_for_xval[ind_inc_trials]
-                            x_all[i_epoch, i_cond, cell, min_trials * (i_x):min_trials * (i_x + 1)] = i_x
+                            y_all[i_epoch, i_cond, cell, i_x, :num_samples_per_label, :] = y_for_xval[ind_inc_trials]
+                            x_all[i_epoch, i_cond, cell, i_x, :num_samples_per_label] = i_x
 
             # Now we have all our data with equal number of samples for each label and each cell, we can run the decoder
-            scores = Maths.decode_across_epochs(x_all, y_all, peak_epoch, peak_tp, train_across_conds, permtest)
+            if stability:
+                scores = Maths.decode_stability(x_all, y_all)
+            else:
+                scores = Maths.decode_across_epochs(x_all, y_all, peak_epoch, peak_tp, train_across_conds, permtest)
 
-            accs_perms[:, :, :, i_cellselection] = scores
+            accs_perms[..., i_cellselection] = scores
+            # accs_perms.append(scores)
 
             if not permtest: print(f'{D.areanames[i_area]} Progress: {i_cellselection+1}/{D.dec_numiters}')
 
-        return accs_perms
+        return np.array(accs_perms)
 
     accs_allperms = run_decoder(False)
 
-    # Get average and SEM
-    accs_out[i_area, 0] = np.mean(accs_allperms, axis=3)
-    std = np.nanstd(accs_allperms, axis=3)
-    sem = std / np.sqrt(D.dec_numiters)
-    sems_out[i_area, 0] = sem
+    if not stability:
 
-    # T-test at every time point
-    accs_out[i_area, 1] = Maths.ttest_every_timepoint(accs_allperms, num_labels)
+        # Get average and SEM
+        accs_out[i_area, 0] = np.mean(accs_allperms, axis=3)
+        std = np.nanstd(accs_allperms, axis=3)
+        sem = std / np.sqrt(D.dec_numiters)
+        sems_out[i_area, 0] = sem
 
-    print(f'{D.areanames[i_area]} Finished decoding')
+        # T-test at every time point
+        accs_out[i_area, 1] = Maths.ttest_every_timepoint(accs_allperms, num_labels)
 
-    if D.dec_do_perms:
+        print(f'{D.areanames[i_area]} Finished decoding')
 
-        accs_permtest = np.empty((num_conds, D.numperms))
+        if D.dec_do_perms:
 
-        for i in range(D.numperms):
+            accs_permtest = np.empty((num_conds, D.numperms))
 
-            one_perm = run_decoder(True)
+            for i in range(D.numperms):
 
-            accs_permtest[:, i] = np.mean(one_perm[:, 0, 0, :], axis=1)
+                one_perm = run_decoder(True)
 
-            print(f'{D.areanames[i_area]} Permutation progress: {i+1}/{D.numperms}')
+                accs_permtest[:, i] = np.mean(one_perm[:, 0, 0, :], axis=1)
 
-        # Get CI
-        accs_sorted = np.sort(accs_permtest, axis=1)  # Sort permutations
-        sigthreshold = D.sigthreshold_onetailed
-        if sigthreshold == 0: sigthreshold = 1  # -0 indexing doesn't work
-        accs_ci = accs_sorted[:, -sigthreshold]  # Take the 95th highest permutation
-        if num_conds > D.numtrialepochs:
-            raise Exception('You cannot have more conds than epochs as no where to store the perm data')
+                print(f'{D.areanames[i_area]} Permutation progress: {i+1}/{D.numperms}')
 
-        sigclusters[i_area] = accs_ci
+            # Get CI
+            accs_sorted = np.sort(accs_permtest, axis=1)  # Sort permutations
+            sigthreshold = D.sigthreshold_onetailed
+            if sigthreshold == 0: sigthreshold = 1  # -0 indexing doesn't work
+            accs_ci = accs_sorted[:, -sigthreshold]  # Take the 95th highest permutation
+            if num_conds > D.numtrialepochs:
+                raise Exception('You cannot have more conds than epochs as no where to store the perm data')
+
+            sigclusters[i_area] = accs_ci
+
+    else:
+
+        accs_out[i_area] = np.mean(accs_allperms, axis=2)
 
 
 class Run:
 
-    def __new__(cls, function_to_run, trace_names, peak_epoch=None, peak_tp=None, train_across_conds=False, areas=range(D.numareas), maintitle='Decoder', savefolder='dec/temp', upsample=None):
-
-        if upsample is None:
-            upsample = D.dec_upsample
+    def __new__(cls, function_to_run, trace_names=None, epochs=D.epochs, epochnames=D.names_epochs, stability=False, train_epochs=None, peak_epoch=None, peak_tp=None, train_across_conds=False, maintitle='Decoder', savefolder='dec/temp', upsample=None):
+        # stability = Test stability of decoding over time and return 2D matrix of accuracies
+        # train_epochs = For stability, train and test on two different epochs and conds
+        # peak_epoch = train on this epoch and test on all others
+        # peak_tp = train on this tp and test on all others
+        # train_across_conds = collapse across conds to train decoder and then test within each cond's held out data
 
         timer = TimeFunction.Timer()
-        num_conds = len(trace_names)
-        if peak_epoch is not None:
-            num_conds += 1
-            trace_names.insert(0, 'Train data')
-        accs_all, sems_all, _ = Utils.getarrs(num_conds, 2)
-        sigclusters = np.empty((D.numareas, num_conds))
-        dists_all = np.zeros((D.numareas, num_conds, 300))
+        n_epochs = len(epochs)
+
+        n = D.numareas
+
+        if stability:
+            n_pnts = n_epochs * (D.n_timepoints + 1)
+            accs_all = Maths.nans((n, n_pnts, n_pnts))
+            sems_all, sigclusters = np.copy(accs_all), np.copy(accs_all)
+            num_conds = 1
+            if train_epochs is not None:
+                num_conds+=1
+            dists_all = np.zeros((n, num_conds, 300))
+        else:
+            num_conds = len(trace_names)
+            if peak_epoch is not None:
+                num_conds += 1
+                trace_names.insert(0, 'Train data')
+            accs_all, sems_all, _ = Utils.getarrs(num_conds, 2)
+            sigclusters = np.empty((n, num_conds))
+            dists_all = np.zeros((n, num_conds, 300))
 
         if D.domultiproc:
 
@@ -207,39 +185,42 @@ class Run:
             sems_all = m.np_zeros(sems_all.shape)
             dists_all = m.np_zeros(dists_all.shape)
 
-            pool = Pool(5)
-            func = partial(analysearea, function_to_run, num_conds, accs_all, sems_all, sigclusters, dists_all, peak_epoch, peak_tp, train_across_conds, upsample)
-            pool.map(func, areas)
+            pool = Pool(D.n_cores)
+            func = partial(analysearea, function_to_run, num_conds, accs_all, sems_all, sigclusters, dists_all, epochs, stability, peak_epoch, peak_tp, train_across_conds, train_epochs)
+            pool.map(func, range(n))
             pool.close()
 
             accs_all = np.array(accs_all)
 
         else:
 
-            dists_all = np.zeros((D.numareas, num_conds, 300))
+            dists_all = np.zeros((n, num_conds, 300))
 
-            for i_area in areas:
-                analysearea(function_to_run, num_conds, accs_all, sems_all, sigclusters, dists_all, peak_epoch, peak_tp, train_across_conds, upsample, i_area)
+            for i_area in range(n):
+                analysearea(function_to_run, num_conds, accs_all, sems_all, sigclusters, dists_all, epochs, stability, peak_epoch, peak_tp, train_across_conds, train_epochs, i_area)
 
-        # Plot details
-        ylabel = 'Accuracy (%)'
-        trials_per_label = np.array(np.nanmin(dists_all[0], axis=1), dtype=int)
-        trials_per_label[trials_per_label < D.dec_minsamples] = D.dec_minsamples
-        trace_names = [t+f' ({n})' for t, n in zip(trace_names, trials_per_label)]
+        if not stability:
+            ylabel = 'Accuracy (%)'
+            trials_per_label = np.array(np.nanmin(dists_all[0], axis=1), dtype=int)
+            trials_per_label[trials_per_label < D.dec_minsamples] = D.dec_minsamples
+            trace_names = [t+f' ({n})' for t, n in zip(trace_names, trials_per_label)]
 
-        Plot.GeneralAllAreas(accs_all[:, 0:1], sems_all[:, 0:1], sigclusters[:, 0:1], trace_names, savefolder, ylabel, maintitle, scale_sig=False, show_sig=False)
+            Plot.GeneralAllAreas(accs_all[:, 0:1], sems_all[:, 0:1], sigclusters[:, 0:1], trace_names, savefolder, maintitle, scale_sig=False, show_sig=False)
 
-        Plot.DecoderSignificant_AllAreas(accs_all, sems_all, sigclusters, trace_names, savefolder, maintitle, peak_epoch=peak_epoch, peak_tp=peak_tp, scale_sig=False, show_sig=False)
+            Plot.DecoderSignificant_AllAreas(accs_all, sems_all, sigclusters, trace_names, savefolder, maintitle, peak_epoch=peak_epoch, peak_tp=peak_tp, scale_sig=False, show_sig=False)
 
+            if D.dec_do_perms:
+                Plot.DecoderPermSig_AllAreas(accs_all, sems_all, sigclusters, trace_names, savefolder, ylabel, maintitle, scale_sig=False, show_sig=True)
 
-        if D.dec_do_perms:
-            Plot.DecoderPermSig_AllAreas(accs_all, sems_all, sigclusters, trace_names, savefolder, ylabel, maintitle, scale_sig=False, show_sig=True)
+            Plot.PlotDist(dists_all, savefolder)
 
-        Plot.PlotDist(dists_all, savefolder)
+        else:
+
+            Plot.PlotDecStab(accs_all, savefolder, epochnames)
 
         print(timer.elapsedtime())
 
-        return accs_all, sems_all, sigclusters, trace_names, savefolder, ylabel, maintitle
+        return accs_all, sems_all, sigclusters, trace_names, savefolder, maintitle
 
 
 

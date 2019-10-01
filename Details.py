@@ -1,15 +1,20 @@
 import numpy as np
 import Details as D
 import os
+import matplotlib.pyplot as plt
 
 domultiproc = True
-dec_numiters = 3
-numperms = 20
+dec_numiters = 10
+
+
+numperms = 30
+n_cores = 6
 
 areas = ['DMStr', 'DLPFC', 'DLStr', 'ACC', 'FP']  # DMStr = caudate, DLStr = putamen
 areanames = ['Caudate', 'DLPFC', 'Putamen', 'ACC', 'FP']  # DMStr = caudate, DLStr = putamen
 numareas = len(areas)
 names = ['Charlie', 'Jacob']
+n_sess = 57
 
 dir_main = 'C:/James/Data/TwoStep/'
 
@@ -24,12 +29,17 @@ dir_savefig = 'figures/'
 ind_totalnumtrials = 0
 ind_goodtrialsind = 1
 ind_trialtype = 2
-ind_picchosen1 = 3
-ind_sidechosen1 = 4
-ind_transition = 5
-ind_picchosen2 = 6
-ind_sidechosen2 = 7
-ind_rewardgiven = 9
+ind_dirsgiven_c1 = 3
+ind_picchosen1 = 4
+ind_sidechosen1 = 5
+ind_rt_c1 = 6
+ind_transition = 7
+ind_dirsgiven_c2 = 8
+ind_picchosen2 = 9
+ind_sidechosen2 = 10
+ind_rt_c2 = 11
+ind_c2values = 12
+ind_rewardgiven = 13
 
 # Strobe codes
 sc_startoftrial = 9
@@ -48,12 +58,20 @@ sc_pumpoff = 40
 sc_endoftrial = 18
 
 # Smoothing traces
-smooth_window_halfwidth = 50
+static_prewindow = 2050
+static_postwindow = 2050
+smooth_window_halfwidth = 25
 smooth_step = 10
-smooth_prewindow = 100
-smooth_postwindow = 800
-smooth_outputlength = int((smooth_prewindow+smooth_postwindow) / smooth_step)
-smooth_savedir = f'{smooth_window_halfwidth}_{smooth_step}_{smooth_prewindow}_{smooth_postwindow}/'
+
+smooth_prewindow = static_prewindow
+smooth_postwindow = static_postwindow
+
+smooth_savedir = f'{smooth_window_halfwidth}_{smooth_step}_{static_prewindow}_{static_postwindow}/'
+
+def calc_smooth_outputlength(prewindow, postwindow, smooth_step):
+    return (prewindow+postwindow) // smooth_step
+
+smooth_outputlength = calc_smooth_outputlength(smooth_prewindow, smooth_postwindow, smooth_step)
 
 def converttimetosmoothedtrace(time):
     time += smooth_prewindow
@@ -66,9 +84,9 @@ rsa_stop = converttimetosmoothedtrace(600)
 rsa_norm_method = 'normalise'
 
 # Trial epochs
-num_timepoints = smooth_outputlength
-epochs = (sc_madefixation, sc_choice1on, sc_transition, sc_choice2on, sc_choice2made, sc_secondaryreinforceron)
-names_epochs = ('Fixation', 'Choice 1 on', '\nTransition Revealed', 'Choice 2 on', '\nChoice 2 made', 'Secondary Reinforcer')
+n_timepoints = smooth_outputlength
+epochs = (sc_madefixation, sc_choice1on, sc_choice1made, sc_transition, sc_choice2on, sc_choice2made, sc_secondaryreinforceron)
+names_epochs = ('Fixation', 'Choice 1 on', 'Choice 1 made', '\nTransition Revealed', 'Choice 2 on', '\nChoice 2 made', 'Secondary Reinforcer')
 numtrialepochs = len(epochs)
 
 # Permutation tests
@@ -78,9 +96,9 @@ sigthreshold_twotailed = int(numperms * 0.025)  # .05% p-value
 # Decoder
 dec_test_size = 0.2
 dec_minsamples = 6
-dec_upsample = False
 dec_do_perms = False
 dec_leaveoneout = False
+dec_allow_probs = True
 decoders = ('Logistic Regression', 'SVM', 'LDA')
 decoder = decoders[1]
 
@@ -94,7 +112,6 @@ def savefig_makefolder(savedir, name):
 
 
 def savefig(savedir):
-    import matplotlib.pyplot as plt
     plt.savefig(f'{dir_savefig}{savedir}')
     plt.close('all')
 
