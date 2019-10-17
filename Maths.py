@@ -558,7 +558,6 @@ def decode_epoch_leaveoneout(x, y, epoch, cond, n_timepoints):
     return accs, best_dec
 
 
-
 # Works out the the minimum number of samples across all cells
 def calculate_min_trials_per_area(data, unique_func, dists_all, i_area):
     dists = nans(dists_all[i_area].shape)
@@ -570,7 +569,7 @@ def calculate_min_trials_per_area(data, unique_func, dists_all, i_area):
 
         # Allow users to only specify one x data
         if np.array(x_datas).ndim == 1:
-            x_datas = [x_datas] * masks.shape[0]
+            x_datas = [x_datas] * len(masks)
 
         # Remove any -1 entries in the x values
         masks = [dec_removeinvalidentries(mask, x_data) for mask, x_data in zip(masks, x_datas)]
@@ -619,7 +618,7 @@ def create_and_train_decoder(x, y):
     elif D.decoder == 'LDA':
         decode_inst = LinearDiscriminantAnalysis()
     elif D.decoder == 'SVM':
-        decode_inst = svm.SVC(probability=D.dec_allow_probs)
+        decode_inst = svm.SVC(probability=D.dec_allow_probs, gamma='scale')
 
     decode_inst.fit(y, x[:, 0])
 

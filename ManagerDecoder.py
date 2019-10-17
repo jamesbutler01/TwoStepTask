@@ -17,6 +17,76 @@ class MyManager(multiprocessing.managers.BaseManager):
 MyManager.register('np_zeros', np.zeros, multiprocessing.managers.ArrayProxy)
 
 
+def run_decoder(n_epochs, num_conds, data, num_labels, num_samples_per_label, validcells, epochs, train_epochs, unique_func, stability, peak_epoch, peak_tp, train_across_conds, accs_perms, do_permtest, i_cellselection):
+
+        y_all = Maths.nans((n_epochs, num_conds, data.n, num_labels, num_samples_per_label, D.n_timepoints))
+        x_all = Maths.nans((n_epochs, num_conds, data.n, num_labels, num_samples_per_label))
+
+        # Loop to collect all the data from the different cells that had enough trials
+        for cell, cell_validity in enumerate(validcells):
+
+            td = data.behavdata[cell]
+
+            x_datas, m_conds = unique_func(td)
+
+            # Allow users to only specify one x data
+            if np.array(x_datas).ndim == 1:
+                x_datas = [x_datas] * len(m_conds)
+
+            # For each epoch
+            for i_epoch, epoch in enumerate(epochs):
+
+                # For each condition get the data
+                for i_cond, (m_cond, x_data, valid_cell) in enumerate(zip(m_conds, x_datas, cell_validity)):
+
+                    # If we're training across epochs, then use training epoch
+                    if stability and num_conds == 2 and i_cond == 0:
+                        y = data.generate_epoch_norm(cell, train_epochs[i_epoch])
+                    else:
+                        y = data.generate_epoch_norm(cell, epoch)
+
+                    # Skip cells without enough trials for a certain condition
+                    if not valid_cell:
+                        continue
+
+                    y_masked = y[m_cond]
+                    x_masked = x_data[m_cond]
+
+                    # Remove any potential -1's in the x data
+                    y_masked = Maths.dec_removeinvalidentries(y_masked, x_masked)
+                    x_masked = Maths.dec_removeinvalidentries(x_masked, x_masked)
+
+                    # Shuffle
+                    if do_permtest:
+                        np.random.shuffle(x_masked)
+
+                    # For each label
+                    for i_x, x_val in enumerate(np.unique(x_masked)):
+
+                        # Get the y data just for this condition and this x-label
+                        y_for_xval = y_masked[x_masked == x_val]
+
+                        # Choose random subset of y data
+                        ind_inc_trials = np.random.choice(len(y_for_xval), num_samples_per_label, replace=False)
+
+                        # Store x and y data in holding arrays
+                        y_all[i_epoch, i_cond, cell, i_x, :num_samples_per_label, :] = y_for_xval[ind_inc_trials]
+                        x_all[i_epoch, i_cond, cell, i_x, :num_samples_per_label] = i_x
+
+        # Now we have all our data with equal number of samples for each label and each cell, we can run the decoder
+        if stability:
+            scores = Maths.decode_stability(x_all, y_all)
+        else:
+            scores = Maths.decode_across_epochs(x_all, y_all, peak_epoch, peak_tp, train_across_conds, do_permtest)
+
+        accs_perms[..., i_cellselection] = scores
+
+        if not do_permtest: print(f'Progress: {i_cellselection + 1}/{D.dec_numiters}')
+
+        return np.array(accs_perms)
+
+
+
 def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_all, epochs, stability, peak_epoch, peak_tp, train_across_conds, train_epochs, i_area):
 
     data = ImportData.EntireArea(D.areas[i_area])
@@ -24,85 +94,33 @@ def analysearea(unique_func, num_conds, accs_out, sems_out, sigclusters, dists_a
 
     num_labels, num_samples_per_label, validcells, dists_all[i_area] = Maths.calculate_min_trials_per_area(data, unique_func, dists_all, i_area)
 
-    def run_decoder(permtest=False):
+    # # Make holding arrays for analysis
+    if not stability:
+        accs_allperms = np.empty((num_conds, n_epochs, D.n_timepoints, D.dec_numiters))
+    else:
+        n_pnts = n_epochs * (D.n_timepoints + 1)
+        accs_allperms = Maths.nans((n_pnts, n_pnts, D.dec_numiters))
 
-        # # Make holding arrays for analysis
-        if not stability:
-            accs_perms = np.empty((num_conds, n_epochs, D.n_timepoints, D.dec_numiters))
-        else:
-            n_pnts = n_epochs * (D.n_timepoints + 1)
-            accs_perms = Maths.nans((n_pnts, n_pnts, D.dec_numiters))
+
+    if D.domultiproc:
+
+        m = MyManager()
+        m.start()
+
+        accs_allperms = m.np_zeros(accs_allperms.shape)
+
+        pool = Pool(D.n_cores)
+        func = partial(run_decoder, n_epochs, num_conds, data, num_labels, num_samples_per_label, validcells, epochs, train_epochs, unique_func, stability, peak_epoch, peak_tp, train_across_conds, accs_allperms, False)
+        pool.map(func, range(D.dec_numiters))
+        pool.close()
+
+        accs_allperms = np.array(accs_allperms)
+
+    else:
 
         for i_cellselection in range(D.dec_numiters):
 
-            y_all = Maths.nans((n_epochs, num_conds, data.n, num_labels, num_samples_per_label, D.n_timepoints))
-            x_all = Maths.nans((n_epochs, num_conds, data.n, num_labels, num_samples_per_label))
-
-            # Loop to collect all the data from the different cells that had enough trials
-            for cell, cell_validity in enumerate(validcells):
-
-                td = data.behavdata[cell]
-
-                x_datas, m_conds = unique_func(td)
-
-                # Allow users to only specify one x data
-                if np.array(x_datas).ndim == 1:
-                    x_datas = [x_datas] * m_conds.shape[0]
-
-                # For each epoch
-                for i_epoch, epoch in enumerate(epochs):
-
-                    # For each condition get the data
-                    for i_cond, (m_cond, x_data, valid_cell) in enumerate(zip(m_conds, x_datas, cell_validity)):
-
-                        # If we're training across epochs, then use training epoch
-                        if stability and num_conds == 2 and i_cond == 0:
-                            y = data.generate_epoch_norm(cell, train_epochs[i_epoch])
-                        else:
-                            y = data.generate_epoch_norm(cell, epoch)
-
-                        # Skip cells without enough trials for a certain condition
-                        if not valid_cell:
-                            continue
-
-                        y_masked = y[m_cond]
-                        x_masked = x_data[m_cond]
-
-                        # Remove any potential -1's in the x data
-                        y_masked = Maths.dec_removeinvalidentries(y_masked, x_masked)
-                        x_masked = Maths.dec_removeinvalidentries(x_masked, x_masked)
-
-                        # Shuffle
-                        if permtest:
-                            np.random.shuffle(x_masked)
-
-                        # For each label
-                        for i_x, x_val in enumerate(np.unique(x_masked)):
-
-                            # Get the y data just for this condition and this x-label
-                            y_for_xval = y_masked[x_masked == x_val]
-
-                            # Choose random subset of y data
-                            ind_inc_trials = np.random.choice(len(y_for_xval), num_samples_per_label, replace=False)
-
-                            # Store x and y data in holding arrays
-                            y_all[i_epoch, i_cond, cell, i_x, :num_samples_per_label, :] = y_for_xval[ind_inc_trials]
-                            x_all[i_epoch, i_cond, cell, i_x, :num_samples_per_label] = i_x
-
-            # Now we have all our data with equal number of samples for each label and each cell, we can run the decoder
-            if stability:
-                scores = Maths.decode_stability(x_all, y_all)
-            else:
-                scores = Maths.decode_across_epochs(x_all, y_all, peak_epoch, peak_tp, train_across_conds, permtest)
-
-            accs_perms[..., i_cellselection] = scores
-            # accs_perms.append(scores)
-
-            if not permtest: print(f'{D.areanames[i_area]} Progress: {i_cellselection+1}/{D.dec_numiters}')
-
-        return np.array(accs_perms)
-
-    accs_allperms = run_decoder(False)
+                accs_allperms = run_decoder(n_epochs, num_conds, data, num_labels, num_samples_per_label, validcells, epochs, train_epochs, unique_func, stability, peak_epoch, peak_tp, train_across_conds, accs_allperms, False, i_cellselection)
 
     if not stability:
 
@@ -175,29 +193,11 @@ class Run:
             sigclusters = np.empty((n, num_conds))
             dists_all = np.zeros((n, num_conds, 300))
 
-        if D.domultiproc:
+        for i_area in range(n):
 
-            m = MyManager()
-            m.start()
+            print(f'Analysing {D.areanames[i_area]}...')
 
-            sigclusters = m.np_zeros(sigclusters.shape)
-            accs_all = m.np_zeros(accs_all.shape)
-            sems_all = m.np_zeros(sems_all.shape)
-            dists_all = m.np_zeros(dists_all.shape)
-
-            pool = Pool(D.n_cores)
-            func = partial(analysearea, function_to_run, num_conds, accs_all, sems_all, sigclusters, dists_all, epochs, stability, peak_epoch, peak_tp, train_across_conds, train_epochs)
-            pool.map(func, range(n))
-            pool.close()
-
-            accs_all = np.array(accs_all)
-
-        else:
-
-            dists_all = np.zeros((n, num_conds, 300))
-
-            for i_area in range(n):
-                analysearea(function_to_run, num_conds, accs_all, sems_all, sigclusters, dists_all, epochs, stability, peak_epoch, peak_tp, train_across_conds, train_epochs, i_area)
+            analysearea(function_to_run, num_conds, accs_all, sems_all, sigclusters, dists_all, epochs, stability, peak_epoch, peak_tp, train_across_conds, train_epochs, i_area)
 
         if not stability:
             ylabel = 'Accuracy (%)'

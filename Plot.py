@@ -87,14 +87,14 @@ def _makeandplotavgs_sigdec(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labe
 
         if peak_tp is None:
             c = f'C{i_cond}'
-            lw = 3 * plotscalar
+            lw = 2 * plotscalar
         else:
             if i_cond==0:
                 c = 'gray'
                 lw=1 * plotscalar
             else:
                 c=f'C{i_cond-1}'
-                lw=3 * plotscalar
+                lw=2 * plotscalar
 
         if show_leg:
             ax.plot(avg_sig, label=f'{label}', color=c, lw=lw)
@@ -176,9 +176,9 @@ def finalpaneltouches(ax, ylab, npoints=numpoints):
 
 def _plotpanel(ax, avg, sem, num, ylab, label, show_leg, numpoints):
     if show_leg:
-        ax.plot(avg, label=f'{label}', color=f'C{num}', lw=3)
+        ax.plot(avg, label=f'{label}', color=f'C{num}', lw=2)
     else:
-        ax.plot(avg, color=f'C{num}', lw=3)
+        ax.plot(avg, color=f'C{num}', lw=2)
     ax.fill_between(range(len(avg)), avg - sem, avg + sem, alpha=0.3, color=f'C{num}')
     finalpaneltouches(ax, ylab, numpoints)
 

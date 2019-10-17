@@ -6,9 +6,8 @@ import matplotlib.pyplot as plt
 domultiproc = True
 dec_numiters = 10
 
-
 numperms = 30
-n_cores = 6
+n_cores = 14
 
 areas = ['DMStr', 'DLPFC', 'DLStr', 'ACC', 'FP']  # DMStr = caudate, DLStr = putamen
 areanames = ['Caudate', 'DLPFC', 'Putamen', 'ACC', 'FP']  # DMStr = caudate, DLStr = putamen
@@ -58,9 +57,9 @@ sc_pumpoff = 40
 sc_endoftrial = 18
 
 # Smoothing traces
-static_prewindow = 2050
-static_postwindow = 2050
-smooth_window_halfwidth = 25
+static_prewindow = 1000
+static_postwindow = 1000
+smooth_window_halfwidth = 50
 smooth_step = 10
 
 smooth_prewindow = static_prewindow
