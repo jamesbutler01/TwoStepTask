@@ -2,13 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="21554b2a-9f39-4912-8d05-ba9fa7110c89" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/TwoStepTask.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/TwoStepTask.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Details.py" beforeDir="false" afterPath="$PROJECT_DIR$/Details.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ImportData.py" beforeDir="false" afterPath="$PROJECT_DIR$/ImportData.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ManagerDecoder.py" beforeDir="false" afterPath="$PROJECT_DIR$/ManagerDecoder.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Maths.py" beforeDir="false" afterPath="$PROJECT_DIR$/Maths.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/Plot.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utils.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -29,7 +29,7 @@
   <component name="ProjectId" id="1SEwFi0zjb9yM6OgPqirGDNf5Jt" />
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$USER_HOME$/Google Drive/PostDoc/Dev/PycharmProjects/LinearValueCoding" />
     <property name="restartRequiresConfirmation" value="false" />
     <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
   </component>
@@ -50,29 +50,8 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.Dec_Dir_UnexpHigh">
-    <configuration name="Dec_Dir_Follow2or1" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="TwoStepTask" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Dec_Dir_Follow2or1.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="Dec_Dir_UnexpHigh" type="PythonConfigurationType" factoryName="Python" temporary="true">
+  <component name="RunManager" selected="Python.Dec_Dir_Fb_c2">
+    <configuration name="Dec_Dir_Fb_c1" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="TwoStepTask" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -81,7 +60,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Dec_Dir_UnexpHigh.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Dec_Dir_Fb_c1.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -90,7 +69,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="Dec_Follow2or1" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="Dec_Dir_Fb_c2" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="TwoStepTask" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -99,7 +78,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Dec_Follow2or1.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Dec_Dir_Fb_c2.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -108,7 +87,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="Dec_Repeated2s" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="Dec_Dir_c1toc2_pre" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="TwoStepTask" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -117,7 +96,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Dec_Repeated2s.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Dec_Dir_c1toc2_pre.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -126,19 +105,34 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="temp" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="ManagerDecoder" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="TwoStepTask" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/temp.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/ManagerDecoder.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Plot" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="TwoStepTask" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Plot.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -148,19 +142,19 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.Dec_Repeated2s" />
-      <item itemvalue="Python.temp" />
-      <item itemvalue="Python.Dec_Follow2or1" />
-      <item itemvalue="Python.Dec_Dir_Follow2or1" />
-      <item itemvalue="Python.Dec_Dir_UnexpHigh" />
+      <item itemvalue="Python.Dec_Dir_Fb_c1" />
+      <item itemvalue="Python.ManagerDecoder" />
+      <item itemvalue="Python.Dec_Dir_c1toc2_pre" />
+      <item itemvalue="Python.Plot" />
+      <item itemvalue="Python.Dec_Dir_Fb_c2" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.Dec_Dir_UnexpHigh" />
-        <item itemvalue="Python.Dec_Dir_Follow2or1" />
-        <item itemvalue="Python.Dec_Follow2or1" />
-        <item itemvalue="Python.Dec_Follow2or1" />
-        <item itemvalue="Python.Dec_Repeated2s" />
+        <item itemvalue="Python.Dec_Dir_Fb_c2" />
+        <item itemvalue="Python.Dec_Dir_Fb_c2" />
+        <item itemvalue="Python.Dec_Dir_Fb_c2" />
+        <item itemvalue="Python.Dec_Dir_Fb_c1" />
+        <item itemvalue="Python.Dec_Dir_Fb_c1" />
       </list>
     </recent_temporary>
   </component>

@@ -12,10 +12,11 @@ width_regplot = 15
 height_regplot = 2.75
 
 
-def _makeandplotavgs(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labels, show_leg, scale_sig, n_epochs=D.numtrialepochs):
+def _makeandplotavgs(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labels, show_leg, scale_sig):
+    n_epochs = avg_in.shape[1]
     numpoints = D.n_timepoints * n_epochs + buffer * n_epochs
     avgs = np.empty((avg_in.shape[0], numpoints))
-    print(n_epochs, numpoints)
+
     avgs.fill(np.nan)
     sems = np.copy(avgs)
     sigmarker = np.empty(numpoints)
@@ -52,7 +53,8 @@ def _makeandplotavgs(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labels, sho
 
 
 # Plot single time point T-test results
-def _makeandplotavgs_sigdec(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labels, show_leg, scale_sig, peak_epoch=None, peak_tp=None, n_epochs=D.numtrialepochs, plotscalar=1):
+def _makeandplotavgs_sigdec(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labels, show_leg, scale_sig, peak_epoch=None, peak_tp=None, plotscalar=1):
+    n_epochs = avg_in.shape[2]
     numpoints = D.n_timepoints * n_epochs + buffer * n_epochs
 
     # Split into pvals and avgs
@@ -113,7 +115,8 @@ def _makeandplotavgs_sigdec(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labe
 
 
 # Plot permutation test results
-def _makeandplotavgs_permtest(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labels, show_leg, scale_sig, n_epochs=D.numtrialepochs):
+def _makeandplotavgs_permtest(avg_in, sems_in, sig_in, ax, ylab, showsig, leg_labels, show_leg, scale_sig):
+    n_epochs = avg_in.shape[1]
     numpoints = D.n_timepoints * n_epochs + buffer * n_epochs
 
     # SPlit into pvals and avgs
@@ -193,7 +196,7 @@ def _finalplotadjustments(f, title, names_epochs=D.names_epochs):
     plt.tick_params(axis='both', which='major', labelsize=13)
 
 
-def GeneralPlot(avgs, sems, sigclusters, trace_names, savefolder, ytitles, maintitle, scale_sig, show_sig=True):
+def GeneralPlot(avgs, sems, sigclusters, trace_names, savefolder, ytitles, maintitle, scale_sig, names_epochs=D.names_epochs, show_sig=True):
     numrows = avgs.shape[1]
     showlegends = [True if i==0 else False for i in range(numrows)]
     
@@ -209,17 +212,17 @@ def GeneralPlot(avgs, sems, sigclusters, trace_names, savefolder, ytitles, maint
                 _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=ytitles, showsig=show_sig, leg_labels=trace_names, show_leg=showlegends, scale_sig=scale_sig)
 
         title = maintitle+ f' ({area})'
-        _finalplotadjustments(f, title)
+        _finalplotadjustments(f, title, names_epochs)
         U.savefig(savefolder, area)
 
 
-def GeneralAllAreas(avgs, sems, sigclusters, trace_names, savefolder, maintitle, scale_sig, show_sig=True):
+def GeneralAllAreas(avgs, sems, sigclusters, trace_names, savefolder, maintitle, scale_sig, names_epochs=D.names_epochs, show_sig=True):
     f, axes_all = plt.subplots(D.numareas, 1, figsize=(width_regplot, height_regplot*D.numareas), sharex=True, sharey=True)
 
     for i_area, (avgs_area, sems_area, sig_area, axes) in enumerate(zip(avgs, sems, sigclusters, axes_all)):
         _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=D.areanames[i_area], showsig=show_sig, leg_labels=trace_names, show_leg=i_area==0, scale_sig=scale_sig)
 
-    _finalplotadjustments(f, maintitle)
+    _finalplotadjustments(f, maintitle, names_epochs)
 
     U.savefig(savefolder, 'all')
 
@@ -236,7 +239,7 @@ def GeneralAllSess(avgs, sems, sigclusters, trace_names, savefolder, maintitle, 
 
     for i_area, (avgs_area, sems_area, sig_area, axes) in enumerate(zip(avgs, sems, sigclusters, axes_all)):
         # First row only
-        _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=f'Sess: {i_area}', showsig=show_sig, leg_labels=trace_names, show_leg=i_area==0, scale_sig=scale_sig, n_epochs=len(names_epochs))
+        _makeandplotavgs(avgs_area[0], sems_area[0], sig_area[0], axes, ylab=f'Sess: {i_area}', showsig=show_sig, leg_labels=trace_names, show_leg=i_area==0, scale_sig=scale_sig)
 
         if i_area < 30:
             axes.patch.set_facecolor('lavender')
@@ -260,7 +263,7 @@ def DecoderSignificant_AllSess(avgs, sems, sigclusters, trace_names, savefolder,
     axes_all = np.delete(axes_all, 30)
 
     for i_area, (avgs_area, sems_area, sig_area, axes) in enumerate(zip(avgs, sems, sigclusters, axes_all)):
-        _makeandplotavgs_sigdec(avgs_area, sems_area, sig_area, axes, ylab=f'Sess: {i_area}', showsig=show_sig, leg_labels=trace_names, show_leg=i_area==0, scale_sig=scale_sig, peak_epoch=peak_epoch, peak_tp=peak_tp, n_epochs=len(names_epochs), plotscalar=1.5)
+        _makeandplotavgs_sigdec(avgs_area, sems_area, sig_area, axes, ylab=f'Sess: {i_area}', showsig=show_sig, leg_labels=trace_names, show_leg=i_area==0, scale_sig=scale_sig, peak_epoch=peak_epoch, peak_tp=peak_tp, plotscalar=1.5)
 
         if i_area < 30:
             axes.patch.set_facecolor('lavender')
@@ -276,14 +279,14 @@ def DecoderSignificant_AllSess(avgs, sems, sigclusters, trace_names, savefolder,
     U.savefig(savefolder, 'sig')
 
 # Plots result from t-test at every time point comparing accuracy to 50%
-def DecoderSignificant_AllAreas(avgs, sems, sigclusters, trace_names, savefolder, maintitle, peak_epoch, peak_tp, scale_sig, show_sig=True):
+def DecoderSignificant_AllAreas(avgs, sems, sigclusters, trace_names, savefolder, maintitle, peak_epoch, peak_tp, scale_sig, names_epochs=D.names_epochs, show_sig=True):
 
     f, axes_all = plt.subplots(D.numareas, 1, figsize=(width_regplot, height_regplot*D.numareas), sharex=True, sharey=True)
 
     for i_area, (avgs_area, sems_area, sig_area, axes) in enumerate(zip(avgs, sems, sigclusters, axes_all)):
             _makeandplotavgs_sigdec(avgs_area, sems_area, sig_area, axes, ylab=D.areanames[i_area], showsig=show_sig, leg_labels=trace_names, show_leg=i_area==0, scale_sig=scale_sig, peak_epoch=peak_epoch, peak_tp=peak_tp)
 
-    _finalplotadjustments(f, maintitle)
+    _finalplotadjustments(f, maintitle, names_epochs)
 
     U.savefig(savefolder, 'all_sig')
 

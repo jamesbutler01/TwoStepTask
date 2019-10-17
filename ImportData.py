@@ -48,15 +48,15 @@ class EntireArea:
         self.area = area
         self.cells_index = GetCellsIndexForArea(area)
         self.n = self.cells_index.n
-        self.savefolder = f'{D.dir_npstorage}{D.smooth_savedir}'
         struct = scipy.io.loadmat(D.dir_task_details)['PreparedData']
 
         self.behavdata = []
         for i in range(self.n):
             self.behavdata.append(GetBehavInfoForCell(struct, self.cells_index, i))
 
-    def generate_epoch_norm(self, cell, epoch):
-        savepath = f'{self.savefolder}norm/{self.area}_{cell}_{epoch}.npy'
+    def generate_epoch_norm(self, cell, epoch, raster_halfwidth=D.smooth_window_halfwidth):
+        savefolder = D.get_smooth_folder(raster_halfwidth)
+        savepath = f'{savefolder}norm/{self.area}_{cell}_{epoch}.npy'
         savedfile = Path(savepath)
         if savedfile.is_file():
             raw = np.load(savedfile)
@@ -72,7 +72,7 @@ class EntireArea:
 
             # Make the save folder if it doesn't exist
             import os
-            directory = os.path.dirname(f'{self.savefolder}norm/')
+            directory = os.path.dirname(f'{savefolder}norm/')
             if not os.path.exists(directory):
                 os.makedirs(directory)
 
@@ -91,8 +91,9 @@ class EntireArea:
 
         return raw_clipped
 
-    def generate_epoch_raw(self, cell, epoch):
-        savepath = f'{self.savefolder}{self.area}_{cell}_{epoch}.npy'
+    def generate_epoch_raw(self, cell, epoch, raster_halfwidth=D.smooth_window_halfwidth):
+        savefolder = D.get_smooth_folder(raster_halfwidth)
+        savepath = f'{savefolder}{self.area}_{cell}_{epoch}.npy'
         savedfile = Path(savepath)
         if savedfile.is_file():
             return np.load(savedfile)
@@ -182,7 +183,7 @@ class EntireArea:
 
             # Make the save folder if it doesn't exist
             import os
-            directory = os.path.dirname(self.savefolder)
+            directory = os.path.dirname(savefolder)
             if not os.path.exists(directory):
                 os.makedirs(directory)
 

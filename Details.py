@@ -4,7 +4,7 @@ import os
 import matplotlib.pyplot as plt
 
 domultiproc = True
-dec_numiters = 10
+dec_numiters = 20
 
 numperms = 30
 n_cores = 14
@@ -62,10 +62,10 @@ static_postwindow = 1000
 smooth_window_halfwidth = 50
 smooth_step = 10
 
-smooth_prewindow = static_prewindow
-smooth_postwindow = static_postwindow
+smooth_prewindow = 600
+smooth_postwindow = 600
 
-smooth_savedir = f'{smooth_window_halfwidth}_{smooth_step}_{static_prewindow}_{static_postwindow}/'
+def get_smooth_folder(halfwidth): return f'{D.dir_npstorage}{halfwidth}_{smooth_step}_{static_prewindow}_{static_postwindow}/'
 
 def calc_smooth_outputlength(prewindow, postwindow, smooth_step):
     return (prewindow+postwindow) // smooth_step

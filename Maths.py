@@ -269,14 +269,14 @@ def normalisedata(arr):
     return arr
 
 
-def decode_across_epochs(x, y, peak_epoch=None, peak_tp=None, train_across_conds=False, permtest=False):
+def decode_across_epochs(x, y, dec_to_test=None, train_across_conds=False, permtest=False):
 
     if permtest:
         n_epochs = 1
         n_timepoints = 1
     else:
         n_epochs = y.shape[0]
-        n_timepoints = D.n_timepoints
+        n_timepoints = y.shape[-1]
 
     numconds = y.shape[1]
     accuracies = np.empty((numconds, n_epochs, n_timepoints))
@@ -290,18 +290,12 @@ def decode_across_epochs(x, y, peak_epoch=None, peak_tp=None, train_across_conds
 
         return accuracies
 
-    # If they specified a peak_epoch, then train on this epoch and test on all others
-    if peak_epoch is not None:
-
-        cond_to_train = 0
-        _, dec_to_test = decode_epoch_traintestsplit(x, y, peak_epoch, cond_to_train, n_timepoints, peak_tp=peak_tp)
-
 
     for epoch in range(n_epochs):
 
         for cond in range(numconds):
 
-            if peak_epoch is not None and cond > 0:
+            if dec_to_test is not None:
 
                 accuracies[cond, epoch], _ = decode_epoch_traintestsplit(x, y, epoch, cond, n_timepoints, dec_in=dec_to_test)
 
@@ -559,8 +553,12 @@ def decode_epoch_leaveoneout(x, y, epoch, cond, n_timepoints):
 
 
 # Works out the the minimum number of samples across all cells
-def calculate_min_trials_per_area(data, unique_func, dists_all, i_area):
-    dists = nans(dists_all[i_area].shape)
+def calculate_min_trials_per_area(data, unique_func, dists_all, i_area, train_epoch_only=False):
+
+    if train_epoch_only:
+        dists = nans([1, dists_all[i_area].shape[-1]])
+    else:
+        dists = nans(dists_all[i_area].shape)
 
     for cell in range(data.n):
         td = data.behavdata[cell]
@@ -570,6 +568,10 @@ def calculate_min_trials_per_area(data, unique_func, dists_all, i_area):
         # Allow users to only specify one x data
         if np.array(x_datas).ndim == 1:
             x_datas = [x_datas] * len(masks)
+
+        # Only look at first condition in this case
+        if train_epoch_only:
+            x_datas, masks = [x_datas[0]], [masks[0]]
 
         # Remove any -1 entries in the x values
         masks = [dec_removeinvalidentries(mask, x_data) for mask, x_data in zip(masks, x_datas)]
@@ -605,10 +607,84 @@ def calculate_min_trials_per_area(data, unique_func, dists_all, i_area):
     num_samples_per_label = min_trials_per_label[0]
 
     # Now we know the maximum of trials to use with the decoder
-    print(
-        f'{i_area} has {original_trials_per_label} min trials per condition, {int(np.mean(validcells) * 100)}% cells included ({sum(validcells)})')
+    print(f'{i_area} has {original_trials_per_label} min trials per condition, {int(np.mean(validcells) * 100)}% cells included ({sum(validcells)})')
 
     return num_labels, num_samples_per_label, validcells, dists
+
+
+def collect_trials_for_decoding(data, unique_func, p, train_epoch_only, do_permtest):
+    if train_epoch_only:
+        num_conds = 1
+        num_labels = p.num_labels_train
+        num_samples_per_label = p.num_samples_per_label_train
+    else:
+        num_conds = p.num_conds
+        num_labels = p.num_labels
+        num_samples_per_label = p.num_samples_per_label
+    validcells = p.validcells
+
+    y_all = nans((p.n_epochs, num_conds, data.n, num_labels, num_samples_per_label, D.n_timepoints))
+    x_all = nans((p.n_epochs, num_conds, data.n, num_labels, num_samples_per_label))
+
+    # Loop to collect all the data from the different cells that had enough trials
+    for cell, cell_validity in enumerate(validcells):
+
+        td = data.behavdata[cell]
+
+        x_datas, m_conds = unique_func(td)
+
+        if train_epoch_only:
+            x_datas, m_conds = [x_datas[0]], [m_conds[0]]
+
+        if len(x_datas) != num_conds or len(m_conds) != num_conds:
+            raise Exception('You are not providing appropriate number of x datas and condition files')
+
+        # Allow users to only specify one x data
+        if np.array(x_datas).ndim == 1:
+            x_datas = [x_datas] * len(m_conds)
+
+        # For each epoch
+        for i_epoch, epoch in enumerate(p.epochs):
+
+            # For each condition get the data
+            for i_cond, (m_cond, x_data, valid_cell) in enumerate(zip(m_conds, x_datas, cell_validity)):
+
+                # Skip cells without enough trials for a certain condition
+                if not valid_cell:
+                    continue
+
+                # If we're training across epochs, then use training epoch
+                if p.stability and num_conds == 2 and i_cond == 0:
+                    y = data.generate_epoch_norm(cell, p.train_epochs[i_epoch], p.peak_halfwidth)
+                else:
+                    y = data.generate_epoch_norm(cell, epoch, p.peak_halfwidth)
+
+                y_masked = y[m_cond]
+                x_masked = x_data[m_cond]
+
+                # Remove any potential -1's in the x data
+                y_masked = dec_removeinvalidentries(y_masked, x_masked)
+                x_masked = dec_removeinvalidentries(x_masked, x_masked)
+
+                # Shuffle
+                if do_permtest:
+                    np.random.shuffle(x_masked)
+
+                # For each label
+                for i_x, x_val in enumerate(np.unique(x_masked)):
+
+                    # Get the y data just for this condition and this x-label
+                    y_for_xval = y_masked[x_masked == x_val]
+
+                    # Choose random subset of y data
+                    ind_inc_trials = np.random.choice(len(y_for_xval), num_samples_per_label, replace=False)
+
+                    # Store x and y data in holding arrays
+                    y_all[i_epoch, i_cond, cell, i_x, :num_samples_per_label, :] = y_for_xval[ind_inc_trials]
+                    x_all[i_epoch, i_cond, cell, i_x, :num_samples_per_label] = i_x
+
+    return x_all, y_all
+
 
 
 def create_and_train_decoder(x, y):
