@@ -36,8 +36,7 @@ class EntireArea:
 
     def __init__(self, area, smooth_prewindow=D.smooth_prewindow,
                  smooth_postwindow=D.smooth_postwindow,
-                 binSize=D.smooth_window_halfwidth,
-                 res=D.smooth_step, exclude_neurons=False):
+                 res=D.smooth_step):
         """
         Initialize EntireArea object for a brain area.
 
@@ -49,12 +48,8 @@ class EntireArea:
             Pre-event window duration (ms)
         smooth_postwindow : int, optional
             Post-event window duration (ms)
-        binSize : int, optional
-            Smoothing window half-width (ms)
         res : int, optional
             Temporal resolution/step size (ms)
-        exclude_neurons : bool, optional
-            Whether to exclude low-firing neurons (<1 Hz)
         """
         self.area = area
         self.i_area = D.areas.index(area)
@@ -70,33 +65,16 @@ class EntireArea:
         self.behavdata = []
         struct = scipy.io.loadmat(D.dir_task_details)['PreparedData']
 
-        # Neurons with average firing rate < 1 Hz across all epochs
-        exc_cells = {
-            'FP': [2, 19, 23, 24, 26, 27, 30, 38, 42, 79, 85, 110, 111, 116, 119, 126, 127, 128,
-                   134, 155, 157, 166, 169, 185, 186, 188, 196, 198, 205, 207, 208, 213, 217, 227,
-                   228, 229, 234, 242, 250, 271],
-            'ACC': [80, 88, 92, 106, 125, 187, 188, 189, 191, 192, 195, 204, 206, 207, 209, 210, 215],
-            'DLPFC': [16, 48, 53, 66, 87, 135, 153, 159, 164],
-            'Caudate': [24, 37, 42, 46, 54, 56, 59, 84, 85, 88, 89, 90, 91, 93, 98, 99, 101, 102,
-                        103, 104, 106, 107, 109, 111],
-            'Putamen': [1, 4, 10, 15, 20, 30, 34, 45, 46, 48, 53, 64, 72, 80, 85, 87, 88, 89, 94,
-                        98, 103, 113, 114, 115, 118]
-        }
-
         cell_inds = np.arange(0, self.n)
-        cell_mask = np.ones(self.n, dtype=bool)
-        if exclude_neurons:
-            cell_mask[exc_cells[area]] = False
-        self.cell_inds = cell_inds[cell_mask]
+        self.cell_inds = cell_inds
         self.n = len(self.cell_inds)
-        self.uniqueSessions = np.array(self.cells_index.unique_sess_index)[cell_mask]
-        self.subj = np.array(self.cells_index.subjindex)[cell_mask]
+        self.uniqueSessions = np.array(self.cells_index.unique_sess_index)
+        self.subj = np.array(self.cells_index.subjindex)
 
         self.res = res
         self.smooth_prewindow = smooth_prewindow
         self.smooth_postwindow = smooth_postwindow
         self.static_pre, self.static_post = 2000, 2000
-        self.static_binSize = binSize
         self.numTimepoints = D.calc_smooth_outputlength(self.smooth_prewindow, self.smooth_postwindow)
         self.statictimepoints = self.static_pre + self.static_post
 
@@ -279,7 +257,6 @@ class EntireArea:
             spikes = scipy.io.loadmat(self.cells_index.spikefilelocs[cell])['tSpikes'].flatten()
             strobes = loadstrobesbytrials(cell)
 
-            # So want to make one smoothed trace per trial stacked in a matrix
             def makesmoothedtrace(spikes, timepoint):
                 output = np.zeros(self.statictimepoints + 400)
                 start = timepoint - D.smooth_prewindow
@@ -302,7 +279,7 @@ class EntireArea:
             allTrials = np.array(alltraces)
 
             # Smooth traces
-            allTrials = scipy.ndimage.gaussian_filter1d(allTrials, self.static_binSize, axis=1)[:, 200:-200]
+            allTrials = scipy.ndimage.gaussian_filter1d(allTrials, D.smooth_window_halfwidth, axis=1)[:, 200:-200]
 
             np.save(savepath, allTrials)
             print('raster generated and saved to', savepath)
