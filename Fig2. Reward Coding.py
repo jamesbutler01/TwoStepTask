@@ -52,7 +52,7 @@ for area in D.areas[1:]:
 
         # Process each epoch
         for epoch_idx, epoch in enumerate(EPOCHS):
-            epoch_normalized = data.generate_epoch_norm(cell_idx, epoch)
+            epoch_normalized = data.generate_epoch_norm(cell_idx, epoch)[0]
 
             # Handle previous trial (first epoch)
             if epoch_idx == 0:
@@ -80,7 +80,7 @@ for area in D.areas[1:]:
         betas_per_epoch[cell_idx] = Maths.reg(design_matrix, response)[15]
 
         # Previous trials analysis (t0, t-1, t-2)
-        response_prev = data.generate_epoch_norm(cell_idx, D.sc_secondaryreinforceron)
+        response_prev = data.generate_epoch_norm(cell_idx, D.sc_secondaryreinforceron)[0]
         response_prev = response_prev[2:]  # Skip first trial
         previous_reward_indices = [15, 1, 14]
         betas_previous_trials[:, cell_idx] = \

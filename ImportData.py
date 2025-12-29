@@ -9,6 +9,7 @@ import scipy.ndimage
 import pandas as pd
 import Details as D
 from pathlib import Path
+import os
 
 
 class EntireArea:
@@ -60,6 +61,12 @@ class EntireArea:
         self.cells_index = GetCellsIndexForArea(area)
         self.n = self.cells_index.n
         self.savefolder = f'{D.dir_npstorage}{D.smooth_savedir}'
+
+        # Make the save folder if it doesn't exist
+        directory = os.path.dirname(self.savefolder)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
         self.behavdata = []
         struct = scipy.io.loadmat(D.dir_task_details)['PreparedData']
 
@@ -118,7 +125,7 @@ class EntireArea:
         out -= np.nanmean(out)
         out /= np.nanstd(out)
 
-        return out
+        return out, None
 
     @staticmethod
     def generate_glm1(td):
@@ -217,14 +224,10 @@ class EntireArea:
         origcell, cell = cell, self.cell_inds[cell]
         savepath = f'{self.savefolder}{D.areaindex[self.area]}_{cell}_{epoch}.npy'
         savedfile = Path(savepath)
-
         if savedfile.is_file():
-            # Load cached data
             allTrials = np.load(savedfile)
         else:
-            # Generate from raw data
             def loadstrobesbytrials(cell):
-                """Load task event strobes for each trial."""
                 file = self.cells_index.strobefilelocs[cell]
                 strobe_codes = scipy.io.loadmat(file)['Strobes'].flatten()
                 strobe_times = scipy.io.loadmat(file)['tStrobes'].flatten()
@@ -233,7 +236,7 @@ class EntireArea:
                 strobe_times = strobe_times[strobe_codes < 41]
                 strobe_codes = strobe_codes[strobe_codes < 41]
 
-                # Remove repeating 9's and 18's
+                # Remove the repeating 9's and 18's that will make indexing annoying
                 mask = np.ones(strobe_codes.shape, dtype=bool)
                 nine_count = 0
                 eighteen_count = 0
@@ -249,7 +252,7 @@ class EntireArea:
                 strobe_codes = strobe_codes[mask]
                 strobe_times = strobe_times[mask]
 
-                # Split strobes into trials
+                # Now split up strobes into each trial
                 strobe_codes_list = []
                 strobe_times_list = []
                 strobe_buffer = []
@@ -264,65 +267,45 @@ class EntireArea:
                     times_buffer.append(time)
 
                     if code == 18:
-                        if trial_counter in self.behavdata[origcell].validtrials:
+                        if trial_counter in self.behavdata[origcell].validtrials:  # Skip invalid trials
                             strobe_codes_list.append(np.array(strobe_buffer))
                             strobe_times_list.append(np.array(times_buffer))
                         trial_counter += 1
 
-                return {'codes': np.array(strobe_codes_list), 'times': np.array(strobe_times_list)}
+                out = {'codes': np.array(strobe_codes_list), 'times': np.array(strobe_times_list)}
+
+                return out
 
             spikes = scipy.io.loadmat(self.cells_index.spikefilelocs[cell])['tSpikes'].flatten()
             strobes = loadstrobesbytrials(cell)
 
+            # So want to make one smoothed trace per trial stacked in a matrix
             def makesmoothedtrace(spikes, timepoint):
-                """Create smoothed peri-event time histogram."""
                 output = np.zeros(self.statictimepoints + 400)
-
-                # Create binary spike array
-                for spike in spikes:
-                    if spike < timepoint - self.static_pre:
-                        continue
-                    if spike > timepoint + self.static_post + 400:
-                        break
-
-                    time_from_event = int(spike - timepoint + self.static_pre)
-                    if 0 <= time_from_event < len(output):
-                        output[time_from_event] += 1
-
-                # Smooth with Gaussian kernel
-                sigma = self.static_binSize / 2.355  # Convert FWHM to sigma
-                output = scipy.ndimage.gaussian_filter1d(output, sigma)
-
-                # Downsample to desired resolution
-                output = block_reduce(output[:-400], block_size=self.res, func=np.mean)
-
-                # Select window around event
-                center_idx = self.static_pre // self.res
-                start_idx = center_idx - self.smooth_prewindow // self.res
-                end_idx = center_idx + self.smooth_postwindow // self.res
-                output = output[start_idx:end_idx]
-
-                # Convert to Hz
-                output *= 1000 / self.res
+                start = timepoint - D.smooth_prewindow
+                theseTs = spikes - timepoint + (self.static_pre + 200);
+                theseTs = theseTs[
+                    (theseTs > -1) & (theseTs < self.statictimepoints + 400)];  # Exclude spikes out of range
+                output[theseTs] = 1;  # Add spikes to raster
 
                 return output
 
-            # Process all trials
-            allTrials = []
-            for trial_codes, trial_times in zip(strobes['codes'], strobes['times']):
-                # Find alignment event time
-                if epoch in trial_codes:
-                    epoch_idx = np.where(trial_codes == epoch)[0][0]
-                    timepoint = trial_times[epoch_idx]
-                    allTrials.append(makesmoothedtrace(spikes, timepoint))
-                else:
-                    # Missing event - fill with NaNs
-                    allTrials.append(np.full(self.numTimepoints, np.nan))
+            # For each trial make a smoothed trace
+            alltraces = []
+            for tr_strobe, tr_strobe_time in zip(strobes['codes'], strobes['times']):
+                timepoint = tr_strobe_time[tr_strobe == epoch]
+                if len(timepoint) > 1:
+                    raise Exception('Multiple strobe codes found!')
+                elif len(timepoint) > 0:
+                    trace = makesmoothedtrace(spikes, timepoint)
+                    alltraces.append(trace)
+            allTrials = np.array(alltraces)
 
-            allTrials = np.array(allTrials)
+            # Smooth traces
+            allTrials = scipy.ndimage.gaussian_filter1d(allTrials, self.static_binSize, axis=1)[:, 200:-200]
 
-            # Cache for future use
             np.save(savepath, allTrials)
+            print('raster generated and saved to', savepath)
 
         # Pick timepoint of interest
         start = self.static_pre
