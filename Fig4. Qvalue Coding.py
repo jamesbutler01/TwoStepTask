@@ -24,7 +24,7 @@ EPOCHS = [D.sc_choice1on]
 all_cpds = []
 
 for area in D.areas[1:]:
-    data = ImportData.EntireArea(area, 500, 1500, exclude_neurons=False)
+    data = ImportData.EntireArea(area, 500, 1500)
     print(f"Processing area: {area}")
 
     # Initialize arrays

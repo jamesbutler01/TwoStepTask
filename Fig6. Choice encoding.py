@@ -30,14 +30,14 @@ print("Running decoder analysis with cell splits...")
 decoder = sklearn.svm.LinearSVC(max_iter=25000)
 
 # Initialize storage for all areas
-data_temp = ImportData.EntireArea('ACC', 600, 600, exclude_neurons=False)
+data_temp = ImportData.EntireArea('ACC', 600, 600)
 shape = (len(D.areas), data_temp.numTimepoints // RES, N_SAMPLES)
 decoder_no_split = np.empty(shape)
 decoder_high_split = np.empty(shape)
 decoder_low_split = np.empty(shape)
 
 for iarea, area in enumerate(D.areas[1:]):
-    data = ImportData.EntireArea(area, 600, 600, exclude_neurons=False)
+    data = ImportData.EntireArea(area, 600, 600)
     print(f"Processing decoder for area: {area}, neurons: {data.n}")
 
     # Find minimum label count and collect data
@@ -148,7 +148,7 @@ for iarea, area in enumerate(D.areas[1:]):
 all_cpds = []
 
 for area in D.areas[1:]:
-    data = ImportData.EntireArea(area, 600, 600, exclude_neurons=False)
+    data = ImportData.EntireArea(area, 600, 600)
     print(f"Processing area: {area}")
 
     # Initialize arrays

@@ -23,7 +23,7 @@ EPOCHS = [D.sc_choice1made]
 all_betas = []
 
 for area in D.areas[1:]:
-    data = ImportData.EntireArea(area, 0, 500, exclude_neurons=False)
+    data = ImportData.EntireArea(area, 0, 500)
     print(f"Processing area: {area}, neurons: {data.n}")
 
     # Initialize arrays

@@ -32,7 +32,7 @@ all_betas_per_epoch = []
 all_betas_previous = []
 
 for area in D.areas[1:]:
-    data = ImportData.EntireArea(area, 0, 1500, exclude_neurons=False)
+    data = ImportData.EntireArea(area, 0, 1500)
     print(f"Processing area: {area}")
 
     # Initialize arrays

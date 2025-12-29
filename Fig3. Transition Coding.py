@@ -28,7 +28,7 @@ all_cpds = []
 all_betas = []
 
 for area in D.areas[1:]:
-    data = ImportData.EntireArea(area, 0, 1000, exclude_neurons=False)
+    data = ImportData.EntireArea(area, 0, 1000)
     print(f"Processing area: {area}")
 
     # Initialize arrays
