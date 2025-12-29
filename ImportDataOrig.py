@@ -16,7 +16,7 @@ class EntireArea:
         self.i_area = D.areas.index(area)
         self.cells_index = GetCellsIndexForArea(area)
         self.n = self.cells_index.n
-        self.savefolder = f'{D.dir_npstorage}{D.smooth_savedir}'
+        self.savefolder = f'{D.dir_npstorage}{D.static_savedir}'
         self.behavdata = []
         struct = scipy.io.loadmat(D.dir_task_details)['PreparedData']
         

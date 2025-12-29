@@ -34,8 +34,8 @@ class EntireArea:
         Duration of post-event window in milliseconds
     """
 
-    def __init__(self, area, smooth_prewindow=D.smooth_prewindow,
-                 smooth_postwindow=D.smooth_postwindow,
+    def __init__(self, area, smooth_prewindow,
+                 smooth_postwindow,
                  res=D.smooth_step):
         """
         Initialize EntireArea object for a brain area.
@@ -44,9 +44,9 @@ class EntireArea:
         ----------
         area : str
             Brain area name
-        smooth_prewindow : int, optional
+        smooth_prewindow : int
             Pre-event window duration (ms)
-        smooth_postwindow : int, optional
+        smooth_postwindow : int
             Post-event window duration (ms)
         res : int, optional
             Temporal resolution/step size (ms)
@@ -55,12 +55,6 @@ class EntireArea:
         self.i_area = D.areas.index(area)
         self.cells_index = GetCellsIndexForArea(area)
         self.n = self.cells_index.n
-        self.savefolder = f'{D.dir_npstorage}{D.smooth_savedir}'
-
-        # Make the save folder if it doesn't exist
-        directory = os.path.dirname(self.savefolder)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
 
         self.behavdata = []
         struct = scipy.io.loadmat(D.dir_task_details)['PreparedData']
@@ -74,9 +68,7 @@ class EntireArea:
         self.res = res
         self.smooth_prewindow = smooth_prewindow
         self.smooth_postwindow = smooth_postwindow
-        self.static_pre, self.static_post = 2000, 2000
         self.numTimepoints = D.calc_smooth_outputlength(self.smooth_prewindow, self.smooth_postwindow)
-        self.statictimepoints = self.static_pre + self.static_post
 
         for i in range(self.n):
             self.behavdata.append(GetBehavInfoForCell(struct, self.cells_index, self.cell_inds[i]))
@@ -200,10 +192,10 @@ class EntireArea:
             Raw firing rates (trials x timepoints)
         """
         origcell, cell = cell, self.cell_inds[cell]
-        savepath = f'{self.savefolder}{D.areaindex[self.area]}_{cell}_{epoch}.npy'
-        savedfile = Path(savepath)
-        if savedfile.is_file():
-            allTrials = np.load(savedfile)
+        file = Path(f'{D.static_save_path}{D.areaindex[self.area]}_{cell}_{epoch}.npy')
+
+        if file.is_file():
+            allTrials = np.load(file)
         else:
             def loadstrobesbytrials(cell):
                 file = self.cells_index.strobefilelocs[cell]
@@ -258,11 +250,10 @@ class EntireArea:
             strobes = loadstrobesbytrials(cell)
 
             def makesmoothedtrace(spikes, timepoint):
-                output = np.zeros(self.statictimepoints + 400)
-                start = timepoint - D.smooth_prewindow
-                theseTs = spikes - timepoint + (self.static_pre + 200);
+                output = np.zeros(D.statictimepoints + 400)
+                theseTs = spikes - timepoint + (D.static_prewindow + 200);
                 theseTs = theseTs[
-                    (theseTs > -1) & (theseTs < self.statictimepoints + 400)];  # Exclude spikes out of range
+                    (theseTs > -1) & (theseTs < D.statictimepoints + 400)];  # Exclude spikes out of range
                 output[theseTs] = 1;  # Add spikes to raster
 
                 return output
@@ -281,11 +272,11 @@ class EntireArea:
             # Smooth traces
             allTrials = scipy.ndimage.gaussian_filter1d(allTrials, D.smooth_window_halfwidth, axis=1)[:, 200:-200]
 
-            np.save(savepath, allTrials)
-            print('raster generated and saved to', savepath)
+            np.save(file, allTrials)
+            print('raster generated and saved to', file)
 
         # Pick timepoint of interest
-        start = self.static_pre
+        start = D.static_prewindow
         allTrials = allTrials[:, start - self.smooth_prewindow:start + self.smooth_postwindow]
 
         # Downsample using self.res

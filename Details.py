@@ -3,9 +3,6 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
-# Stats
-numperms = 25
-do_multiproc = False
 n_cores = 1
 areas = ['FP', 'ACC', 'DLPFC', 'Caudate', 'Putamen']
 areaindex= {'FP' : 'FP', 'ACC' : 'ACC', 'DLPFC' : 'DLPFC', 'Caudate' : 'DMStr', 'Putamen' : 'DLStr'}
@@ -18,7 +15,6 @@ dir_qvals = [dir_subjs[i]+'qvals/qvals_sess_' for i in range(2)]
 dir_spikes = (dir_main + 'CharlieData/neuronaldata/', dir_main+'JacobData/neuronaldata/')
 dir_task_details = dir_main + 'PreparedData.mat'
 dir_npstorage = 'tmp/'
-dir_savefig = 'figures/'
 
 
 # Indices for matlab 'PreparedData' behavioural details
@@ -57,12 +53,17 @@ sc_endoftrial = 18
 # Smoothing traces
 smooth_window_halfwidth = 50
 smooth_step = 10
-smooth_prewindow = 100
-smooth_postwindow = 800
+static_prewindow = 2000
+static_postwindow = 2000
+statictimepoints = static_prewindow + static_postwindow
 
-smooth_outputlength = int((smooth_prewindow+smooth_postwindow) / smooth_step)
-smooth_savedir = f'{smooth_window_halfwidth}_{smooth_step}_{smooth_prewindow}_{smooth_postwindow}/'
+static_save_dir = f'{smooth_window_halfwidth}_{smooth_step}_{static_prewindow}_{static_postwindow}/'
+static_save_path = f'{dir_npstorage}{static_save_dir}'
 
+# Make the save folder if it doesn't exist
+directory = os.path.dirname(static_save_path)
+if not os.path.exists(directory):
+    os.makedirs(directory)
 
 # Actual all epochs
 epochs_all = (sc_madefixation, sc_choice1on, sc_choice1made, sc_transition, sc_choice2on, sc_choice2made, sc_secondaryreinforceron)
