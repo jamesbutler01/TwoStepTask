@@ -25,7 +25,7 @@ EPOCHS = (D.sc_secondaryreinforceron, D.sc_madefixation, D.sc_choice1on,
 EPOCH_INDICES = [0, 100, 150, 200, 250, 300]
 NUM_TIMEPOINTS = EPOCH_INDICES[-1]
 
-#%% Main Analysis Loop
+# %% Main Analysis Loop
 all_cpds_concatenated = []
 all_cpds_per_epoch = []
 all_betas_per_epoch = []
@@ -52,7 +52,7 @@ for area in D.areas[1:]:
 
         # Process each epoch
         for epoch_idx, epoch in enumerate(EPOCHS):
-            epoch_normalized, _ = data.generate_epoch_norm(cell_idx, epoch)
+            epoch_normalized = data.generate_epoch_norm(cell_idx, epoch)
 
             # Handle previous trial (first epoch)
             if epoch_idx == 0:
@@ -80,7 +80,7 @@ for area in D.areas[1:]:
         betas_per_epoch[cell_idx] = Maths.reg(design_matrix, response)[15]
 
         # Previous trials analysis (t0, t-1, t-2)
-        response_prev, _ = data.generate_epoch_norm(cell_idx, D.sc_secondaryreinforceron)
+        response_prev = data.generate_epoch_norm(cell_idx, D.sc_secondaryreinforceron)
         response_prev = response_prev[2:]  # Skip first trial
         previous_reward_indices = [15, 1, 14]
         betas_previous_trials[:, cell_idx] = \
@@ -92,7 +92,7 @@ for area in D.areas[1:]:
     all_betas_previous.append(betas_previous_trials)
     all_betas_per_epoch.append(betas_per_epoch)
 
-#%% Create Figure
+# %% Create Figure
 fig = plt.figure(figsize=(12.5 * FIGURE_SCALE, 11 * FIGURE_SCALE), dpi=FIGURE_DPI)
 
 # Define grid layouts
@@ -146,7 +146,7 @@ for ax in [ax_cpd, ax_reward,
            ax_prev_reward_1, ax_prev_reward_2, ax_prev_reward_3, ax_prev_reward_4]:
     ax.axhline(0, c='k', lw=0.5, zorder=-10)
 
-#%% Plot CPD Over Time
+# %% Plot CPD Over Time
 all_latencies = []
 
 for area_idx, area in enumerate(D.areas[1:]):
@@ -163,12 +163,12 @@ for area_idx, area in enumerate(D.areas[1:]):
 
         if epoch_idx == 1:
             Plot.AvgSem(cpd_data, ax_cpd, xrange=range(epoch_start, epoch_end),
-                       c=f'C{area_idx}', label=area, showleg=False,
-                       zorder=20 - area_idx * 3, alpha=0.3, lw=LINE_WIDTH)
+                        c=f'C{area_idx}', label=area, showleg=False,
+                        zorder=20 - area_idx * 3, alpha=0.3, lw=LINE_WIDTH)
         else:
             Plot.AvgSem(cpd_data, ax_cpd, xrange=range(epoch_start, epoch_end),
-                       c=f'C{area_idx}', showleg=False,
-                       zorder=20 - area_idx * 3, alpha=0.3, lw=LINE_WIDTH)
+                        c=f'C{area_idx}', showleg=False,
+                        zorder=20 - area_idx * 3, alpha=0.3, lw=LINE_WIDTH)
 
     # Calculate latency peaks
     latency_peaks = []
@@ -191,13 +191,13 @@ ax_cpd.set_xticklabels(
 ax_cpd.set_xlim(0, 300)
 ax_cpd.set_ylim(0, 6)
 ax_cpd.legend(loc='upper right', bbox_to_anchor=[1, 0.95],
-             framealpha=1, fontsize=10)
+              framealpha=1, fontsize=10)
 ax_cpd.set_ylabel('CPD (%)')
 
-#%% Plot Latency Analysis (Panel C)
+# %% Plot Latency Analysis (Panel C)
 latencies_combined = [
     all_latencies[0] + all_latencies[1],  # PFC
-    all_latencies[2] + all_latencies[3]   # Striatum
+    all_latencies[2] + all_latencies[3]  # Striatum
 ]
 
 for region_idx, latencies in enumerate(latencies_combined):
@@ -207,8 +207,8 @@ for region_idx, latencies in enumerate(latencies_combined):
     sems[region_idx] = Maths.sem(np.array(latencies))
 
     ax_latency.errorbar(means, range(len(means)), xerr=sems,
-                       color=['grey', 'k'][region_idx],
-                       elinewidth=2, capsize=5, capthick=2, marker='o')
+                        color=['grey', 'k'][region_idx],
+                        elinewidth=2, capsize=5, capthick=2, marker='o')
     print(f"{['PFC', 'Striatum'][region_idx]}: "
           f"{means[region_idx]:.2f} ± {sems[region_idx]:.2f}")
 
@@ -218,14 +218,14 @@ ax_latency.set_ylim(-0.5, 1.25)
 ax_latency.set_xlabel('Peak coding latency (ms)', fontsize=FONT_SIZE_AXIS)
 ax_latency.set_xlim(480, 620)
 
-#%% Plot Average Coefficients (Panel D)
+# %% Plot Average Coefficients (Panel D)
 for area_idx, area in enumerate(D.areas[1:]):
     betas_prev = all_betas_previous[area_idx]
 
     # Reward coefficients (Panel D)
     reward_betas = betas_prev[0]
     Plot.AvgSem(reward_betas, ax_reward, c=f'C{area_idx}',
-               label=area, alpha=0.3, showleg=False, lw=LINE_WIDTH)
+                label=area, alpha=0.3, showleg=False, lw=LINE_WIDTH)
     Plot.set_xlim(data, ax_reward, 0, 600, res=300)
     ax_reward.set_ylabel('Average\ncoefficients')
     ax_reward.yaxis.set_label_coords(-0.18, 0.5)
@@ -248,7 +248,7 @@ for area_idx, area in enumerate(D.areas[1:]):
 
     for trial_lag in range(3):
         Plot.AvgSem(betas_prev[trial_lag], ax_main, c=f'C{trial_lag + 5}',
-                   label=labels[trial_lag], alpha=0.3, showleg=False, lw=LINE_WIDTH)
+                    label=labels[trial_lag], alpha=0.3, showleg=False, lw=LINE_WIDTH)
 
         # Calculate mean at peak
         peak_idx = np.argmax(np.abs(np.mean(betas_prev[trial_lag, :, :50], axis=0)))
@@ -256,7 +256,7 @@ for area_idx, area in enumerate(D.areas[1:]):
 
         # Plot in inset
         ax_inset.errorbar([trial_lag], means[trial_lag], 0,
-                         marker='o', c=f'C{trial_lag + 5}')
+                          marker='o', c=f'C{trial_lag + 5}')
 
     # Format main axis
     Plot.set_xlim(data, ax_main, 0, 600, res=300)
@@ -267,7 +267,7 @@ for area_idx, area in enumerate(D.areas[1:]):
 
     if area == 'DLPFC':
         ax_main.legend(loc='center left', ncol=1, fontsize=15,
-                      bbox_to_anchor=[1.3, 0.5])
+                       bbox_to_anchor=[1.3, 0.5])
     if area in ['ACC', 'Caudate']:
         ax_main.set_ylabel('Average\ncoefficients', fontsize=FONT_SIZE_AXIS)
         ax_main.yaxis.set_label_coords(-0.18, 0.5)

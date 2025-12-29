@@ -111,19 +111,14 @@ class EntireArea:
         -------
         out : ndarray
             Z-scored firing rates (trials x timepoints)
-        fr_pe : ndarray
-            Average firing rate in population window for each trial
         """
-        out = self.generate_epoch_raw(cell, epoch)[0]
+        out = self.generate_epoch_raw(cell, epoch)
 
         # Z-score normalization
         out -= np.nanmean(out)
         out /= np.nanstd(out)
 
-        # Average FR in population analysis window
-        fr_pe = np.mean(out[:, self.timetopoint(D.pop_window_start):self.timetopoint(D.pop_window_stop)], axis=1)
-
-        return out, fr_pe
+        return out
 
     @staticmethod
     def generate_glm1(td):
@@ -218,8 +213,6 @@ class EntireArea:
         -------
         allTrials : ndarray
             Raw firing rates (trials x timepoints)
-        fr_pe : ndarray
-            Average firing rate in population window for each trial
         """
         origcell, cell = cell, self.cell_inds[cell]
         savepath = f'{self.savefolder}{D.areaindex[self.area]}_{cell}_{epoch}.npy'
@@ -337,13 +330,9 @@ class EntireArea:
 
         # Downsample using self.res
         allTrials = block_reduce(allTrials, block_size=(1, self.res), func=np.mean, cval=np.mean(allTrials))
-        fr_pe = np.mean(allTrials[:, D.pop_window_start:D.pop_window_stop], axis=1)  # Average FR just after the event
 
-        return allTrials, fr_pe
+        return allTrials
 
-    def timetopoint(self, time_ms):
-        """Convert time in ms to array index."""
-        return (time_ms + self.smooth_prewindow) // self.res
 
 
 class GetBehavInfoForCell:
