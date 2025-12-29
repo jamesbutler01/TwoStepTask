@@ -35,8 +35,7 @@ class EntireArea:
     """
 
     def __init__(self, area, smooth_prewindow,
-                 smooth_postwindow,
-                 res=D.smooth_step):
+                 smooth_postwindow):
         """
         Initialize EntireArea object for a brain area.
 
@@ -48,8 +47,6 @@ class EntireArea:
             Pre-event window duration (ms)
         smooth_postwindow : int
             Post-event window duration (ms)
-        res : int, optional
-            Temporal resolution/step size (ms)
         """
         self.area = area
         self.i_area = D.areas.index(area)
@@ -65,7 +62,6 @@ class EntireArea:
         self.uniqueSessions = np.array(self.cells_index.unique_sess_index)
         self.subj = np.array(self.cells_index.subjindex)
 
-        self.res = res
         self.smooth_prewindow = smooth_prewindow
         self.smooth_postwindow = smooth_postwindow
         self.numTimepoints = D.calc_smooth_outputlength(self.smooth_prewindow, self.smooth_postwindow)
@@ -95,7 +91,7 @@ class EntireArea:
         out -= np.nanmean(out)
         out /= np.nanstd(out)
 
-        return out, None
+        return out
 
     @staticmethod
     def generate_glm1(td):
@@ -265,8 +261,8 @@ class EntireArea:
 
             os.makedirs(f'data/{self.area}/trial_timings', exist_ok=True)
             os.makedirs(f'data/{self.area}/spikes', exist_ok=True)
-            df.to_parquet(f'data/{self.area}/trial_timings/{cell}.parquet')
-            np.save(f'data/{self.area}/spikes/{cell}.npy', spikes)
+            df.to_parquet(f'data/{self.area}/trial_timings/cell_{cell}.parquet')
+            np.save(f'data/{self.area}/spikes/cell_{cell}.npy', spikes)
 
             # For each trial make a smoothed trace
             alltraces = []
@@ -293,8 +289,8 @@ class EntireArea:
         start = D.static_prewindow
         allTrials = allTrials[:, start - self.smooth_prewindow:start + self.smooth_postwindow]
 
-        # Downsample using self.res
-        allTrials = block_reduce(allTrials, block_size=(1, self.res), func=np.mean, cval=np.mean(allTrials))
+        # Downsample to the specified resolution
+        allTrials = block_reduce(allTrials, block_size=(1, D.smooth_step), func=np.mean, cval=np.mean(allTrials))
 
         return allTrials
 

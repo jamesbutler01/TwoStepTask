@@ -9,6 +9,8 @@ This minimal version contains only the functions actually used in Fig2-6 scripts
 
 import numpy as np
 
+import Details
+
 
 def AvgSem(arr, ax=None, c=None, ls=None, label=None, lw=None, do_sem=True,
            zorder=1, xrange=None, showsem=True, showleg=True, alpha=0.4):
@@ -141,7 +143,7 @@ def set_xlim(data, ax, minv=None, maxv=None, showTicks=True, y=False,
         offset = data.smooth_prewindow
 
     # Set tick positions (in data indices)
-    ax.set_xticks(range(offset // data.res, data.numTimepoints + 1, res // data.res))
+    ax.set_xticks(range(offset // Details.smooth_step, data.numTimepoints + 1, res // Details.smooth_step))
 
     # Set tick labels (in milliseconds)
     if showTicks:
@@ -153,10 +155,10 @@ def set_xlim(data, ax, minv=None, maxv=None, showTicks=True, y=False,
 
     # Set axis limits if specified
     if minv is not None and maxv is not None:
-        ax.set_xlim((minv + data.smooth_prewindow) // data.res,
-                    (maxv + data.smooth_prewindow) // data.res)
+        ax.set_xlim((minv + data.smooth_prewindow) // Details.smooth_step,
+                    (maxv + data.smooth_prewindow) // Details.smooth_step)
 
     # Apply to y-axis if requested (inverted)
     if y:
-        ax.set_ylim((maxv + data.smooth_prewindow) // data.res,
-                    (minv + data.smooth_prewindow) // data.res)
+        ax.set_ylim((maxv + data.smooth_prewindow) // Details.smooth_step,
+                    (minv + data.smooth_prewindow) // Details.smooth_step)

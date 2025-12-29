@@ -4,8 +4,8 @@ import os
 import matplotlib.pyplot as plt
 
 n_cores = 1
-areas = ['FP', 'ACC', 'DLPFC', 'Caudate', 'Putamen']
-areaindex= {'FP' : 'FP', 'ACC' : 'ACC', 'DLPFC' : 'DLPFC', 'Caudate' : 'DMStr', 'Putamen' : 'DLStr'}
+areas = ['misc', 'ACC', 'DLPFC', 'Caudate', 'Putamen']
+areaindex= {'misc' : '', 'ACC' : 'ACC', 'DLPFC' : 'DLPFC', 'Caudate' : 'DMStr', 'Putamen' : 'DLStr'}
 numareas = len(areas)
 numsessions = 57
 names = ['Charlie', 'Jacob']
@@ -51,8 +51,8 @@ sc_pumpoff = 40
 sc_endoftrial = 18
 
 # Smoothing and storing rasters
-smooth_window_halfwidth = 50
-smooth_step = 10
+smooth_window_halfwidth = 50  # Gaussian sigma used for smoothing
+smooth_step = 10  # Output resolution in ms (10 = 1 timepoint every 10 ms)
 static_prewindow = 2000
 static_postwindow = 2000
 statictimepoints = static_prewindow + static_postwindow
