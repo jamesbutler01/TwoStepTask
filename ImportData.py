@@ -242,7 +242,7 @@ class EntireArea:
                             strobe_times_list.append(np.array(times_buffer))
                         trial_counter += 1
 
-                out = {'codes': np.array(strobe_codes_list), 'times': np.array(strobe_times_list)}
+                out = {'codes': strobe_codes_list, 'times': strobe_times_list}
 
                 return out
 
@@ -258,14 +258,28 @@ class EntireArea:
 
                 return output
 
+            import pandas as pd
+            df = pd.DataFrame(strobes)
+            df = df.explode(['codes', 'times']).reset_index()
+            df = df.rename(columns={'index': 'trial_number'})
+
+            os.makedirs(f'data/{self.area}/trial_timings', exist_ok=True)
+            os.makedirs(f'data/{self.area}/spikes', exist_ok=True)
+            df.to_parquet(f'data/{self.area}/trial_timings/{cell}.parquet')
+            np.save(f'data/{self.area}/spikes/{cell}.npy', spikes)
+
             # For each trial make a smoothed trace
             alltraces = []
-            for tr_strobe, tr_strobe_time in zip(strobes['codes'], strobes['times']):
+
+            for trial_num, trial_data in df.groupby('trial_number'):
+                tr_strobe = trial_data['codes'].values
+                tr_strobe_time = trial_data['times'].values
+
                 timepoint = tr_strobe_time[tr_strobe == epoch]
                 if len(timepoint) > 1:
                     raise Exception('Multiple strobe codes found!')
                 elif len(timepoint) > 0:
-                    trace = makesmoothedtrace(spikes, timepoint)
+                    trace = makesmoothedtrace(spikes, timepoint[0])
                     alltraces.append(trace)
             allTrials = np.array(alltraces)
 

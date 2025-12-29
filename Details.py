@@ -50,7 +50,7 @@ sc_pumpon = 39
 sc_pumpoff = 40
 sc_endoftrial = 18
 
-# Smoothing traces
+# Smoothing and storing rasters
 smooth_window_halfwidth = 50
 smooth_step = 10
 static_prewindow = 2000
@@ -60,15 +60,12 @@ statictimepoints = static_prewindow + static_postwindow
 static_save_dir = f'{smooth_window_halfwidth}_{smooth_step}_{static_prewindow}_{static_postwindow}/'
 static_save_path = f'{dir_npstorage}{static_save_dir}'
 
-# Make the save folder if it doesn't exist
 directory = os.path.dirname(static_save_path)
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-# Actual all epochs
 epochs_all = (sc_madefixation, sc_choice1on, sc_choice1made, sc_transition, sc_choice2on, sc_choice2made, sc_secondaryreinforceron)
 names_epochs_all = ('Fixation', 'Choice 1 on', 'Choice 1 made', '\nTransition Revealed', 'Choice 2 on', '\nChoice 2 made', 'Secondary Reinforcer')
-
 
 def calc_smooth_outputlength(prewindow, postwindow):
     return (prewindow+postwindow)//smooth_step
