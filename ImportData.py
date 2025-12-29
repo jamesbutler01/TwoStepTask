@@ -193,58 +193,6 @@ class EntireArea:
         if file.is_file():
             allTrials = np.load(file)
         else:
-            def loadstrobesbytrials(cell):
-                file = self.cells_index.strobefilelocs[cell]
-                strobe_codes = scipy.io.loadmat(file)['Strobes'].flatten()
-                strobe_times = scipy.io.loadmat(file)['tStrobes'].flatten()
-
-                # Remove codes we don't care about
-                strobe_times = strobe_times[strobe_codes < 41]
-                strobe_codes = strobe_codes[strobe_codes < 41]
-
-                # Remove the repeating 9's and 18's that will make indexing annoying
-                mask = np.ones(strobe_codes.shape, dtype=bool)
-                nine_count = 0
-                eighteen_count = 0
-                for i, code in enumerate(strobe_codes):
-                    if code == 9:
-                        if nine_count % 3 != 1:
-                            mask[i] = False
-                        nine_count += 1
-                    elif code == 18:
-                        if eighteen_count % 3 != 1:
-                            mask[i] = False
-                        eighteen_count += 1
-                strobe_codes = strobe_codes[mask]
-                strobe_times = strobe_times[mask]
-
-                # Now split up strobes into each trial
-                strobe_codes_list = []
-                strobe_times_list = []
-                strobe_buffer = []
-                times_buffer = []
-                trial_counter = 0
-                for i, (code, time) in enumerate(zip(strobe_codes, strobe_times)):
-                    if code == 9:
-                        times_buffer = []
-                        strobe_buffer = []
-
-                    strobe_buffer.append(code)
-                    times_buffer.append(time)
-
-                    if code == 18:
-                        if trial_counter in self.behavdata[origcell].validtrials:  # Skip invalid trials
-                            strobe_codes_list.append(np.array(strobe_buffer))
-                            strobe_times_list.append(np.array(times_buffer))
-                        trial_counter += 1
-
-                out = {'codes': strobe_codes_list, 'times': strobe_times_list}
-
-                return out
-
-            spikes = scipy.io.loadmat(self.cells_index.spikefilelocs[cell])['tSpikes'].flatten()
-            strobes = loadstrobesbytrials(cell)
-
             def makesmoothedtrace(spikes, timepoint):
                 output = np.zeros(D.statictimepoints + 400)
                 theseTs = spikes - timepoint + (D.static_prewindow + 200);
@@ -254,20 +202,13 @@ class EntireArea:
 
                 return output
 
-            import pandas as pd
-            df = pd.DataFrame(strobes)
-            df = df.explode(['codes', 'times']).reset_index()
-            df = df.rename(columns={'index': 'trial_number'})
-
-            os.makedirs(f'data/{self.area}/trial_timings', exist_ok=True)
-            os.makedirs(f'data/{self.area}/spikes', exist_ok=True)
-            df.to_parquet(f'data/{self.area}/trial_timings/cell_{cell}.parquet')
-            np.save(f'data/{self.area}/spikes/cell_{cell}.npy', spikes)
+            trial_timings_df = pd.read_parquet(f'data/{self.area}/trial_timings/cell_{cell}.parquet')
+            spikes = np.load(f'data/{self.area}/spikes/cell_{cell}.npy')
 
             # For each trial make a smoothed trace
             alltraces = []
 
-            for trial_num, trial_data in df.groupby('trial_number'):
+            for trial_num, trial_data in trial_timings_df.groupby('trial_number'):
                 tr_strobe = trial_data['codes'].values
                 tr_strobe_time = trial_data['times'].values
 
