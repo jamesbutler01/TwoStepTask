@@ -6,15 +6,13 @@ import matplotlib.pyplot as plt
 n_cores = 1
 areas = ['misc', 'ACC', 'DLPFC', 'Caudate', 'Putamen']
 areaindex= {'misc' : '', 'ACC' : 'ACC', 'DLPFC' : 'DLPFC', 'Caudate' : 'DMStr', 'Putamen' : 'DLStr'}
-numareas = len(areas)
-numsessions = 57
 names = ['Charlie', 'Jacob']
 dir_main = 'data/'
 dir_subjs = (dir_main+'CharlieData/', dir_main+'JacobData/')
 dir_qvals = [dir_subjs[i]+'qvals/qvals_sess_' for i in range(2)]
 dir_spikes = (dir_main + 'CharlieData/neuronaldata/', dir_main+'JacobData/neuronaldata/')
 dir_task_details = dir_main + 'PreparedData.mat'
-dir_npstorage = 'tmp/'
+dir_local_storage = 'tmp/'
 
 
 # Indices for matlab 'PreparedData' behavioural details
@@ -58,7 +56,7 @@ static_postwindow = 2000
 statictimepoints = static_prewindow + static_postwindow
 
 static_save_dir = f'{smooth_window_halfwidth}_{smooth_step}_{static_prewindow}_{static_postwindow}/'
-static_save_path = f'{dir_npstorage}{static_save_dir}'
+static_save_path = f'{dir_local_storage}{static_save_dir}'
 
 directory = os.path.dirname(static_save_path)
 if not os.path.exists(directory):
@@ -66,9 +64,3 @@ if not os.path.exists(directory):
 
 epochs_all = (sc_madefixation, sc_choice1on, sc_choice1made, sc_transition, sc_choice2on, sc_choice2made, sc_secondaryreinforceron)
 names_epochs_all = ('Fixation', 'Choice 1 on', 'Choice 1 made', '\nTransition Revealed', 'Choice 2 on', '\nChoice 2 made', 'Secondary Reinforcer')
-
-def calc_smooth_outputlength(prewindow, postwindow):
-    return (prewindow+postwindow)//smooth_step
-
-
-

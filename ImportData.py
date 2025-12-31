@@ -64,7 +64,7 @@ class EntireArea:
 
         self.smooth_prewindow = smooth_prewindow
         self.smooth_postwindow = smooth_postwindow
-        self.numTimepoints = D.calc_smooth_outputlength(self.smooth_prewindow, self.smooth_postwindow)
+        self.numTimepoints = (smooth_prewindow+smooth_postwindow)//D.smooth_step
 
         for i in range(self.n):
             self.behavdata.append(GetBehavInfoForCell(struct, self.cells_index, self.cell_inds[i]))
