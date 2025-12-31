@@ -1,4 +1,4 @@
-# Neural data and analysis code for Miranda et al. (2025)
+# Neural data and analysis code for Miranda, Butler et al. (2025)
 
 
 
@@ -14,7 +14,7 @@ This includes the raw spike timestamps and task event timings for 240 ACC neuron
 
 
 
-To get started simply run one of the `Fig..` scripts to generate the relevant figure. Note, the first time running will be considerably slower as the smoothed spike rasters for each cell and trial epoch are generated from the raw data. Subsequent runs will be quicker as these rasters are cached locally upon creation. Note, the code for statistics/permutations is not provided due to the extensive time these take to run, but we're happy to provide them upon request. 
+To get started simply run one of the `Fig.` scripts to generate the relevant figure. The first time running will be considerably slower as the smoothed spike rasters for each cell and trial epoch are generated from the raw data. Subsequent runs will be quicker as these rasters are cached locally upon creation. Note, the code for statistics/permutations is not provided due to the extensive time these take to run, but we're happy to provide them upon request. 
 
 
 
