@@ -18,5 +18,5 @@ To get started simply run one of the `Fig.` scripts to generate the relevant fig
 
 
 
-Please do cite our paper if you decide to use the data. If you have any questions then feel free to get in touch with me via the corresponding author address listed on the Elife paper. 
+Please do cite our paper if you decide to use the data. If you have any questions then feel free to get in touch with us via the corresponding author information listed on the Elife paper. 
 
