@@ -2,6 +2,7 @@ import Details as D
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 n_cores = 1
 areas = ['misc', 'ACC', 'DLPFC', 'Caudate', 'Putamen']
@@ -12,7 +13,9 @@ dir_subjs = (dir_main+'CharlieData/', dir_main+'JacobData/')
 dir_qvals = [dir_subjs[i]+'qvals/qvals_sess_' for i in range(2)]
 dir_spikes = (dir_main + 'CharlieData/neuronaldata/', dir_main+'JacobData/neuronaldata/')
 dir_task_details = dir_main + 'PreparedData.mat'
-dir_local_storage = 'tmp/'
+current_drive = Path.cwd().drive  # e.g., 'C:'
+dir_local_storage = Path(f"{current_drive}/tmp/")
+dir_local_storage.mkdir(parents=True, exist_ok=True)
 
 
 # Indices for matlab 'PreparedData' behavioural details
@@ -56,7 +59,7 @@ static_postwindow = 2000
 statictimepoints = static_prewindow + static_postwindow
 
 static_save_dir = f'{smooth_window_halfwidth}_{smooth_step}_{static_prewindow}_{static_postwindow}/'
-static_save_path = f'{dir_local_storage}{static_save_dir}'
+static_save_path = f'{dir_local_storage}/{static_save_dir}'
 
 directory = os.path.dirname(static_save_path)
 if not os.path.exists(directory):
