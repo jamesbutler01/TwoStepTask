@@ -22,7 +22,6 @@ matplotlib.rc('ytick', labelsize=12)
 N_SPLITS = 2
 N_REPEATS = 1
 N_SAMPLES = 20
-RES = 1  # Take every nth time point
 
 # %% Run decoder analysis for cell splits
 print("Running decoder analysis with cell splits...")
@@ -31,7 +30,7 @@ decoder = sklearn.svm.LinearSVC(max_iter=25000)
 
 # Initialize storage for all areas
 data_temp = ImportData.EntireArea('ACC', 600, 600)
-shape = (len(D.areas), data_temp.numTimepoints // RES, N_SAMPLES)
+shape = (len(D.areas), data_temp.numTimepoints, N_SAMPLES)
 decoder_no_split = np.empty(shape)
 decoder_high_split = np.empty(shape)
 decoder_low_split = np.empty(shape)
@@ -95,7 +94,7 @@ for iarea, area in enumerate(D.areas[1:]):
 
         # Collect balanced data
         labels_array = np.empty((data.n, 2, min_label))
-        responses_array = np.empty((data.n, 2, min_label, data.numTimepoints // RES))
+        responses_array = np.empty((data.n, 2, min_label, data.numTimepoints))
 
         for cell_idx in range(data.n):
             response = responses_all[cell_idx]
