@@ -13,7 +13,7 @@ dir_subjs = (dir_main+'CharlieData/', dir_main+'JacobData/')
 dir_qvals = [dir_subjs[i]+'qvals/qvals_sess_' for i in range(2)]
 dir_spikes = (dir_main + 'CharlieData/neuronaldata/', dir_main+'JacobData/neuronaldata/')
 dir_task_details = dir_main + 'PreparedData.mat'
-current_drive = Path.cwd().drive  # e.g., 'C:'
+current_drive = Path.cwd().drive
 dir_local_storage = Path(f"{current_drive}/tmp/")
 dir_local_storage.mkdir(parents=True, exist_ok=True)
 
