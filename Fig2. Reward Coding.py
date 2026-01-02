@@ -9,9 +9,7 @@ import Plot
 # Configuration
 FIGURE_DPI = 200
 FIGURE_SCALE = 0.9
-FONT_SIZE_LABEL = 14
 FONT_SIZE_AXIS = 13
-FONT_SIZE_LETTER = 16
 FONT_SIZE_TICK = 12
 LINE_WIDTH = 2.5
 
@@ -139,7 +137,7 @@ for idx, ax in enumerate(all_axes):
     panel_indices = [0, 2, 3, 5, 6, 7, 8]
     x_positions = [-0.1, -0.2, -0.25, -0.25, -0.05, -0.25, -0.05]
     y_positions = [1, 1.1, 1.1, 1, 1, 1, 1]
-    Plot.let(ax, panel_indices[idx], x=x_positions[idx], y=y_positions[idx], fontsize=FONT_SIZE_LETTER)
+    Plot.let(ax, panel_indices[idx], x=x_positions[idx], y=y_positions[idx], fontsize=16)
 
 # Add horizontal zero lines
 for ax in [ax_cpd, ax_reward,

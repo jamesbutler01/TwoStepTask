@@ -8,7 +8,6 @@ import Plot
 
 # Configuration
 FIGURE_DPI = 300
-FONT_SIZE_LABEL = 14
 FONT_SIZE_AXIS = 9
 FONT_SIZE_LETTER = 16
 LINE_WIDTH = 2.5

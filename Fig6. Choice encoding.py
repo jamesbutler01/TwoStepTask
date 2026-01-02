@@ -23,9 +23,6 @@ N_SPLITS = 5
 N_REPEATS = 1
 N_SAMPLES = 20
 
-# %% Run decoder analysis for cell splits
-print("Running decoder analysis with cell splits...")
-
 decoder = sklearn.svm.LinearSVC(max_iter=25000)
 
 # Initialize storage for all areas
