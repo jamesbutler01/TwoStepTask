@@ -19,7 +19,7 @@ matplotlib.rc('xtick', labelsize=12)
 matplotlib.rc('ytick', labelsize=12)
 
 # Decoder parameters
-N_SPLITS = 2
+N_SPLITS = 5
 N_REPEATS = 1
 N_SAMPLES = 20
 
